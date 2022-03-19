@@ -219,7 +219,7 @@ if [ $ENABLE_5G == "true" ]; then
 fi
 
 # SQM
-if [ $ENABLE_SQM == "true" && $IS_HOTSPOT == "false" ]; then
+if [ $ENABLE_SQM == "true" ] && [ $IS_HOTSPOT == "false" ]; then
     uci set sqm.eth1.enabled="1"
 else
     uci set sqm.eth1.enabled="0"
