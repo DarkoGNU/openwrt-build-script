@@ -144,7 +144,7 @@ rm -rf builder/config
 mkdir -p builder/config/etc/uci-defaults/
 chmod 755 builder/config/etc/uci-defaults/
 
-#cat > builder/config/etc/uci-defaults/99-autoconf << EOL
+cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 #!/bin/sh
 
 # System info
@@ -257,7 +257,7 @@ uci commit
 
 # The end
 exit 0
-#EOL
+EOL
 
 chmod 755 builder/config/etc/uci-defaults/99-autoconf
 
