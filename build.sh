@@ -15,42 +15,51 @@ BUILDER_REDOWNLOAD="false"
 
 ### Image config
 
-# Target device
-RELEASE="snapshot"
-TARGET="ramips/mt7621"
-PROFILE="totolink_x5000r"
-
-# Main address, how many hotspots?
-ROUTER_ADDRESS="192.168.1.1"
-HOTSPOT_COUNT=1
-
-# Time zone
-ZONENAME="Europe/Warsaw"
-TIMEZONE="CET-1CEST,M3.5.0,M10.5.0/3"
-
-# WiFi - common config
-SSID="Fiber"
-MOBILITY_DOMAIN="abba"
-
-# WiFi - 2GHz
-G2_CHANNEL="1"
-G2_MODE="HE20"
-
-# WiFi - 5GHz
-G5_ENABLE="true"
-G5_CHANNEL="36"
-G5_MODE="HE80"
+# Addresses
+GATEWAY="192.168.1.1"
+ADDRESS="192.168.1.1"
+IS_HOTSPOT="false"
+DEVICE_NAME="Router"
 
 # SQM
 SQM_ENABLE="true"
 DOWNLOAD_SPEED="0"
 UPLOAD_SPEED="16000"
 
+# WiFi - common config
+SSID="Fiber"
+MOBILITY_DOMAIN="abba"
+
+# WiFi - 2GHz
+ENABLE_2G="true"
+CHANNEL_2G="1"
+MODE_2G="HE20"
+RADIO_2G="0"
+
+# WiFi - 5GHz
+ENABLE_5G="true"
+CHANNEL_5G="36"
+MODE_5G="HE80"
+RADIO_5G="1"
+
+# Time zone
+ZONENAME="Europe/Warsaw"
+TIMEZONE="CET-1CEST,M3.5.0,M10.5.0/3"
+
 # DNS
 DNS_1="1.1.1.1"
 DNS_2="1.0.0.1"
 DNS6_1="2606:4700:4700::1111"
 DNS6_2="2606:4700:4700::1001"
+
+# Target device
+RELEASE="snapshot"
+TARGET="ramips/mt7621"
+PROFILE="totolink_x5000r"
+
+# Packages & theme
+PACKAGES="luci-ssl luci-app-sqm"
+THEME="bootstrap-dark"
 
 ###
 
@@ -67,14 +76,12 @@ error () { echo -e "\e[31m[INFO]\e[0m ${1}" ; }
 
 ### Download the image builder
 
-if [[ ${BUILDER_REDOWNLOAD} == "false" && -d "builder/" ]]; then
-    return
-fi
-
-if [[ $RELEASE == "snapshot" ]]; then
-    image_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
-else
-    image_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.xz"
+if [[ ${BUILDER_REDOWNLOAD} == "true" || ! -d "builder/" ]]; then
+    if [[ $RELEASE == "snapshot" ]]; then
+        image_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
+    else
+        image_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.xz"
+    fi
 fi
 
 info "Downloading the image builder"
@@ -107,20 +114,5 @@ if [[ ${INSTALL_DEPENDENCIES} == "true" ]]; then
         sudo pacman -S --needed --noconfirm rsync ca-certificates
     fi
 fi
-
-###
-
-### Actually generate the images
-
-for (( device=0; device <= $HOTSPOT_COUNT; device++))
-do
-    if [[ $device == 0 ]]; then
-        is_hotspot="false"
-    else
-        is_hotspot="true"
-    fi
-
-
-done
 
 ###
