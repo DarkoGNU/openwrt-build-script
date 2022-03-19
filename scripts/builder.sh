@@ -4,8 +4,7 @@
 RELEASE="snapshot"
 TARGET="ramips/mt7621"
 
-# Printing with prefixes
-info () { echo -e "\e[32m[INFO]\e[0m ${1}" ; }
+source common.sh
 
 # Determine the image's address
 if [ $RELEASE == "snapshot" ]; then

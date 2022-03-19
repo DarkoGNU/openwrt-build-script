@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Printing with prefixes
-info () { echo -e "\e[32m[INFO]\e[0m ${1}" ; }
+source common.sh
 
 if [ -e /etc/arch-release ]; then
     OS="arch"
