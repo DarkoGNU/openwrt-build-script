@@ -1,15 +1,25 @@
 #!/bin/bash
 
-# A script to download and extract the image builder. Adjust the variables below:
-BUILDER_LINK="https://downloads.openwrt.org/snapshots/targets/ramips/mt7621/openwrt-imagebuilder-ramips-mt7621.Linux-x86_64.tar.xz"
+# Adjust the variables below:
+RELEASE="snapshot"
+TARGET="ramips/mt7621"
 
-# Download the builder
-wget -O builder.tar.xz $BUILDER_LINK
+# Printing with prefixes
+info () { echo -e "\e[32m[INFO]\e[0m ${1}" ; }
 
-# Extract it
+# Determine the image's address
+if [ $RELEASE == "snapshot" ]; then
+    image_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
+else
+    image_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.xz"
+fi
+
+info "Downloading the image builder"
+wget -O builder.tar.xz ${image_link}
+
+info "Extracting the image builder"
 mkdir builder
 tar xf builder.tar.xz --strip=1 -C ./builder
 
-# Remove the archive
+info "Deleting the archive"
 rm builder.tar.xz
-
