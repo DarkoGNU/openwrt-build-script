@@ -136,4 +136,3 @@ uci commit
 
 # The end
 exit 0
-

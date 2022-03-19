@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Adjust the variables below:
-EXIT_ON_FAIL="true"
+set -a
 
 if [ ${EXIT_ON_FAIL} == "true" ]; then
     set -e

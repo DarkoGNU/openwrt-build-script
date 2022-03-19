@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Adjust the variables below:
-RELEASE="snapshot"
-TARGET="ramips/mt7621"
-
-source common.sh
-
 # Determine the image's address
 if [ $RELEASE == "snapshot" ]; then
     image_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
