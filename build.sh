@@ -87,7 +87,7 @@ if [[ $BUILDER_REDOWNLOAD == "true" || ! -d "builder/" ]]; then
     wget -O builder.tar.xz $builder_link
 
     info "Extracting the image builder"
-    mkdir builder
+    mkdir -p builder
     tar xf builder.tar.xz --strip=1 -C ./builder
 
     info "Deleting the archive"
@@ -109,9 +109,7 @@ if [[ $INSTALL_DEPENDENCIES == "true" ]]; then
     if [[ $os == "arch" ]]; then
         info "Installing dependencies for Arch Linux"
         sudo pacman -S --needed --noconfirm \
-        # Officially required
         base-devel ncurses zlib gawk git gettext openssl libxslt wget unzip python \
-        # Additional
         rsync ca-certificates
     fi
 fi
@@ -278,10 +276,10 @@ cd builder/
 
 rm -rf images/
 make clean
-make image PROFILE="$PROFILE" PACKAGES="$PACKAGES" EXTRA_IMAGE_NAME="$HOSTNAME" FILES="config/" BIN_DIR="images/"
+make image PROFILE="$PROFILE" PACKAGES="$PACKAGES" EXTRA_IMAGE_NAME="$HOSTNAME" FILES="${PWD}/config/" BIN_DIR="${PWD}/images/"
 
 cd ..
-mkdir images/
+mkdir -p images/
 cp builder/images/*.bin images/
 
 ###
