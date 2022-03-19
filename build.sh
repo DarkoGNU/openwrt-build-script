@@ -6,7 +6,7 @@
 EXIT_ON_FAIL="true"
 
 # Install dependencies?
-INSTALL_DEPENDENCIES="true"
+INSTALL_DEPENDENCIES="false"
 
 # Redownload the image builder?
 BUILDER_REDOWNLOAD="false"
@@ -22,7 +22,7 @@ PROFILE="totolink_x5000r"
 
 # Main address, how many hotspots?
 ROUTER_ADDRESS="192.168.1.1"
-HOTSPOT_COUNT=0
+HOTSPOT_COUNT=1
 
 # Time zone
 ZONENAME="Europe/Warsaw"
@@ -57,7 +57,7 @@ DNS6_2="2606:4700:4700::1001"
 
 ### Exit on failure & pretty printing
 
-if [ ${EXIT_ON_FAIL} == "true" ]; then
+if [[ ${EXIT_ON_FAIL} == "true" ]]; then
     set -e
 fi
 
@@ -69,41 +69,67 @@ error () { echo -e "\e[31m[INFO]\e[0m ${1}" ; }
 ### Download the image builder
 
 # Determine the image's address
-if [ $RELEASE == "snapshot" ]; then
-    image_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
-else
-    image_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.xz"
-fi
+download_builder () {
+    if [[ ${BUILDER_REDOWNLOAD} == "false" && -d "builder/" ]]; then
+        return
+    fi
 
-info "Downloading the image builder"
-wget -O builder.tar.xz ${image_link}
+    if [[ $RELEASE == "snapshot" ]]; then
+        image_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
+    else
+        image_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.xz"
+    fi
 
-info "Extracting the image builder"
-mkdir builder
-tar xf builder.tar.xz --strip=1 -C ./builder
+    info "Downloading the image builder"
+    wget -O builder.tar.xz ${image_link}
 
-info "Deleting the archive"
-rm builder.tar.xz
+    info "Extracting the image builder"
+    mkdir builder
+    tar xf builder.tar.xz --strip=1 -C ./builder
+
+    info "Deleting the archive"
+    rm builder.tar.xz
+}; download_builder
 
 ###
 
 ### Install dependencies
+install_dependencies () {
+    if [[ ${INSTALL_DEPENDENCIES} == "false" ]]; then
+        return
+    fi
 
-if [ ${INSTALL_DEPENDENCIES} == "true" ]; then
-    if [ -e /etc/arch-release ]; then
-        OS="arch"
+    if [[ -e /etc/arch-release ]]; then
+        local os="arch"
     else
         info "Your operating system is unsupported"
         exit 1
     fi
 
-    if [ ${OS} == "arch" ]; then
+    if [[ ${os} == "arch" ]]; then
         info "Installing dependencies for Arch Linux"
         # Officialy required
         sudo pacman -S --needed --noconfirm base-devel ncurses zlib gawk git gettext openssl libxslt wget unzip python
         # Additional
         sudo pacman -S --needed --noconfirm rsync ca-certificates
     fi
-fi
+}; install_dependencies
+
+###
+
+### Actually generate the images
+
+generate_images () {
+    for (( device=0; device <= $HOTSPOT_COUNT; device++))
+    do
+        if [[ $device == 0 ]]; then
+            local is_hotspot="false"
+        else
+            local is_hotspot="true"
+        fi
+
+    
+    done
+}; generate_images
 
 ###
