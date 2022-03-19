@@ -108,10 +108,11 @@ if [[ $INSTALL_DEPENDENCIES == "true" ]]; then
 
     if [[ $os == "arch" ]]; then
         info "Installing dependencies for Arch Linux"
-        # Officialy required
-        sudo pacman -S --needed --noconfirm base-devel ncurses zlib gawk git gettext openssl libxslt wget unzip python
+        sudo pacman -S --needed --noconfirm \
+        # Officially required
+        base-devel ncurses zlib gawk git gettext openssl libxslt wget unzip python \
         # Additional
-        sudo pacman -S --needed --noconfirm rsync ca-certificates
+        rsync ca-certificates
     fi
 fi
 
