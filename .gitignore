@@ -12,3 +12,6 @@
 # Built Visual Studio Code Extensions
 *.vsix
 
+# Image builder
+builder/*
+
