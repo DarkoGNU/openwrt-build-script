@@ -253,7 +253,6 @@ uci commit
 
 # The end
 exit 0
-
 EOL
 
 chmod 755 builder/config/etc/uci-defaults/99-autoconf
@@ -267,3 +266,19 @@ if [ -d secrets/ssh ]; then
 fi
 
 ###
+
+### Actually build the image
+
+cd builder/
+
+rm -rf images/
+make clean
+make image PROFILE="$PROFILE" PACKAGES="$PACKAGES" EXTRA_IMAGE_NAME="$HOSTNAME" FILES="config/" BIN_DIR="images/"
+
+cd ..
+mkdir images/
+cp builder/images/*.bin images/
+
+###
+
+info "Image building completed. Enjoy!"
