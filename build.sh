@@ -1,10 +1,19 @@
 #!/bin/bash
 
+### General config
+
 # Exit on failure?
 EXIT_ON_FAIL="true"
 
 # Install dependencies?
 INSTALL_DEPENDENCIES="true"
+
+# Redownload the image builder?
+BUILDER_REDOWNLOAD="false"
+
+###
+
+### Image config
 
 # Target device
 RELEASE="snapshot"
@@ -18,6 +27,9 @@ HOTSPOT_COUNT=0
 # Time zone
 ZONENAME="Europe/Warsaw"
 TIMEZONE="CET-1CEST,M3.5.0,M10.5.0/3"
+
+# Packages to include
+PACKAGES="luci-ssl luci-app-sqm"
 
 # WiFi - common config
 SSID="Fiber"
@@ -40,6 +52,8 @@ DNS_1="1.1.1.1"
 DNS_2="1.0.0.1"
 DNS6_1="2606:4700:4700::1111"
 DNS6_2="2606:4700:4700::1001"
+
+###
 
 ### Exit on failure & pretty printing
 
@@ -71,6 +85,8 @@ tar xf builder.tar.xz --strip=1 -C ./builder
 info "Deleting the archive"
 rm builder.tar.xz
 
+###
+
 ### Install dependencies
 
 if [ ${INSTALL_DEPENDENCIES} == "true" ]; then
@@ -89,18 +105,5 @@ if [ ${INSTALL_DEPENDENCIES} == "true" ]; then
         sudo pacman -S --needed --noconfirm rsync ca-certificates
     fi
 fi
-
-###
-
-### Actually build the image
-
-PACKAGES="luci-ssl luci-app-sqm"
-FILES="$PWD/router"
-BIN_DIR="$PWD/images"
-EXTRA_IMAGE_NAME="Router"
-
-cd builder/
-make clean
-make image PROFILE="$PROFILE" PACKAGES="$PACKAGES" FILES="$FILES" BIN_DIR="$BIN_DIR" EXTRA_IMAGE_NAME="$EXTRA_IMAGE_NAME"
 
 ###
