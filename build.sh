@@ -202,7 +202,7 @@ if [ $ENABLE_2G == "true" ]; then
 fi
 
 # WiFi 5G
-if [ $ENABLE_5G == "true"]; then
+if [ $ENABLE_5G == "true" ]; then
     uci set wireless.${default_radio_5g}.ssid="$SSID"
     uci set wireless.${radio_5g}.channel="$CHANNEL_5G"
     uci set wireless.${radio_5g}.htmode="$MODE_5G"
