@@ -33,12 +33,14 @@ MOBILITY_DOMAIN="abba"
 # WiFi - 2GHz
 ENABLE_2G="true"
 CHANNEL_2G="1"
+COUNTRY_2G="US"
 MODE_2G="HE20"
 RADIO_2G="0"
 
 # WiFi - 5GHz
 ENABLE_5G="true"
 CHANNEL_5G="36"
+COUNTRY_5G="US"
 MODE_5G="HE80"
 RADIO_5G="1"
 
@@ -186,6 +188,7 @@ uci add_list network.wan6.dns="$DNS6_2"
 # WiFi 2G
 if [ $ENABLE_2G == "true" ]; then
     uci set wireless.${default_radio_2g}.ssid="$SSID"
+    uci set wireless.${radio_2g}.country="$COUNTRY_2G"
     uci set wireless.${radio_2g}.channel="$CHANNEL_2G"
     uci set wireless.${radio_2g}.htmode="$MODE_2G"
 
@@ -203,6 +206,7 @@ fi
 # WiFi 5G
 if [ $ENABLE_5G == "true" ]; then
     uci set wireless.${default_radio_5g}.ssid="$SSID"
+    uci set wireless.${radio_5g}.country="$COUNTRY_5G"
     uci set wireless.${radio_5g}.channel="$CHANNEL_5G"
     uci set wireless.${radio_5g}.htmode="$MODE_5G"
 
