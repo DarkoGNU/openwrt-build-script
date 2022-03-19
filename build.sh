@@ -141,7 +141,8 @@ default_radio_5g="default_${radio_5g}"
 ### Generate the config
 
 rm -rf builder/config
-mkdir -p builder/config/etc/uci-defaults
+mkdir -p builder/config/etc/uci-defaults/
+chmod 755 builder/config/etc/uci-defaults/
 
 cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 #!/bin/sh
@@ -254,5 +255,15 @@ uci commit
 exit 0
 
 EOL
+
+chmod 755 builder/config/etc/uci-defaults/99-autoconf
+
+if [ -d secrets/ssh ]; then
+    mkdir -p builder/config/etc/dropbear/
+    chmod 700 builder/config/etc/dropbear/
+
+    cp secrets/ssh/* builder/config/etc/dropbear/
+    chmod 600 builder/config/etc/dropbear/*
+fi
 
 ###
