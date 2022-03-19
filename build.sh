@@ -144,7 +144,7 @@ rm -rf builder/config
 mkdir -p builder/config/etc/uci-defaults/
 chmod 755 builder/config/etc/uci-defaults/
 
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
+#cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 #!/bin/sh
 
 # System info
@@ -185,34 +185,38 @@ uci add_list network.wan6.dns="$DNS6_1"
 uci add_list network.wan6.dns="$DNS6_2"
 
 # WiFi 2G
-uci set wireless.${default_radio_2g}.ssid="$SSID"
-uci set wireless.${radio_2g}.channel="$CHANNEL_2G"
-uci set wireless.${radio_2g}.htmode="$MODE_2G"
+if [ $ENABLE_2G == "true" ]; then
+    uci set wireless.${default_radio_2g}.ssid="$SSID"
+    uci set wireless.${radio_2g}.channel="$CHANNEL_2G"
+    uci set wireless.${radio_2g}.htmode="$MODE_2G"
 
-uci set wireless.${default_radio_2g}.encryption="sae-mixed"
-uci set wireless.${default_radio_2g}.key="$wifi_password"
+    uci set wireless.${default_radio_2g}.encryption="sae-mixed"
+    uci set wireless.${default_radio_2g}.key="$wifi_password"
 
-uci set wireless.${default_radio_2g}.ieee80211r="1"
-uci set wireless.${default_radio_2g}.ft_over_ds="1"
-uci set wireless.${default_radio_2g}.ft_psk_generate_local="1"
-uci set wireless.${default_radio_2g}.mobility_domain="$MOBILITY_DOMAIN"
+    uci set wireless.${default_radio_2g}.ieee80211r="1"
+    uci set wireless.${default_radio_2g}.ft_over_ds="1"
+    uci set wireless.${default_radio_2g}.ft_psk_generate_local="1"
+    uci set wireless.${default_radio_2g}.mobility_domain="$MOBILITY_DOMAIN"
 
-uci set wireless.${radio_2g}.disabled="0"
+    uci set wireless.${radio_2g}.disabled="0"
+fi
 
 # WiFi 5G
-uci set wireless.${default_radio_5g}.ssid="$SSID"
-uci set wireless.${radio_5g}.channel="$CHANNEL_5G"
-uci set wireless.${radio_5g}.htmode="$MODE_5G"
+if [ $ENABLE_5G == "true"]; then
+    uci set wireless.${default_radio_5g}.ssid="$SSID"
+    uci set wireless.${radio_5g}.channel="$CHANNEL_5G"
+    uci set wireless.${radio_5g}.htmode="$MODE_5G"
 
-uci set wireless.${default_radio_5g}.encryption="sae-mixed"
-uci set wireless.${default_radio_5g}.key="$wifi_password"
+    uci set wireless.${default_radio_5g}.encryption="sae-mixed"
+    uci set wireless.${default_radio_5g}.key="$wifi_password"
 
-uci set wireless.${default_radio_5g}.ieee80211r="1"
-uci set wireless.${default_radio_5g}.ft_over_ds="1"
-uci set wireless.${default_radio_5g}.ft_psk_generate_local="1"
-uci set wireless.${default_radio_5g}.mobility_domain="$MOBILITY_DOMAIN"
+    uci set wireless.${default_radio_5g}.ieee80211r="1"
+    uci set wireless.${default_radio_5g}.ft_over_ds="1"
+    uci set wireless.${default_radio_5g}.ft_psk_generate_local="1"
+    uci set wireless.${default_radio_5g}.mobility_domain="$MOBILITY_DOMAIN"
 
-uci set wireless.${radio_5g}.disabled="0"
+    uci set wireless.${radio_5g}.disabled="0"
+fi
 
 # SQM
 if [ $ENABLE_SQM == "true" && $IS_HOTSPOT == "false" ]; then
@@ -253,7 +257,7 @@ uci commit
 
 # The end
 exit 0
-EOL
+#EOL
 
 chmod 755 builder/config/etc/uci-defaults/99-autoconf
 
