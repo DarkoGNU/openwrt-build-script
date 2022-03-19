@@ -28,12 +28,11 @@ HOTSPOT_COUNT=1
 ZONENAME="Europe/Warsaw"
 TIMEZONE="CET-1CEST,M3.5.0,M10.5.0/3"
 
-# Packages to include
-PACKAGES="luci-ssl luci-app-sqm"
-
 # WiFi - common config
 SSID="Fiber"
 MOBILITY_DOMAIN="abba"
+
+# WiFi - 2GHz
 G2_CHANNEL="1"
 G2_MODE="HE20"
 
@@ -68,39 +67,33 @@ error () { echo -e "\e[31m[INFO]\e[0m ${1}" ; }
 
 ### Download the image builder
 
-# Determine the image's address
-download_builder () {
-    if [[ ${BUILDER_REDOWNLOAD} == "false" && -d "builder/" ]]; then
-        return
-    fi
+if [[ ${BUILDER_REDOWNLOAD} == "false" && -d "builder/" ]]; then
+    return
+fi
 
-    if [[ $RELEASE == "snapshot" ]]; then
-        image_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
-    else
-        image_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.xz"
-    fi
+if [[ $RELEASE == "snapshot" ]]; then
+    image_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
+else
+    image_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.xz"
+fi
 
-    info "Downloading the image builder"
-    wget -O builder.tar.xz ${image_link}
+info "Downloading the image builder"
+wget -O builder.tar.xz ${image_link}
 
-    info "Extracting the image builder"
-    mkdir builder
-    tar xf builder.tar.xz --strip=1 -C ./builder
+info "Extracting the image builder"
+mkdir builder
+tar xf builder.tar.xz --strip=1 -C ./builder
 
-    info "Deleting the archive"
-    rm builder.tar.xz
-}; download_builder
+info "Deleting the archive"
+rm builder.tar.xz
 
 ###
 
 ### Install dependencies
-install_dependencies () {
-    if [[ ${INSTALL_DEPENDENCIES} == "false" ]]; then
-        return
-    fi
 
+if [[ ${INSTALL_DEPENDENCIES} == "true" ]]; then
     if [[ -e /etc/arch-release ]]; then
-        local os="arch"
+        os="arch"
     else
         info "Your operating system is unsupported"
         exit 1
@@ -113,23 +106,21 @@ install_dependencies () {
         # Additional
         sudo pacman -S --needed --noconfirm rsync ca-certificates
     fi
-}; install_dependencies
+fi
 
 ###
 
 ### Actually generate the images
 
-generate_images () {
-    for (( device=0; device <= $HOTSPOT_COUNT; device++))
-    do
-        if [[ $device == 0 ]]; then
-            local is_hotspot="false"
-        else
-            local is_hotspot="true"
-        fi
+for (( device=0; device <= $HOTSPOT_COUNT; device++))
+do
+    if [[ $device == 0 ]]; then
+        is_hotspot="false"
+    else
+        is_hotspot="true"
+    fi
 
-    
-    done
-}; generate_images
+
+done
 
 ###
