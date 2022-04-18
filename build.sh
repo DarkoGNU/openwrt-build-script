@@ -1,120 +1,26 @@
 #!/bin/bash
 
-### General config
-
-# Exit on failure?
-EXIT_ON_FAIL="true"
-
-# Install dependencies?
-INSTALL_DEPENDENCIES="false"
-
-# Redownload the image builder?
-BUILDER_REDOWNLOAD="false"
-
-###
-
-### Image config
-
-# Addresses
-GATEWAY="192.168.1.1"
-ADDRESS="192.168.1.1"
-HOSTNAME="Router"
-IS_HOTSPOT="false"
-
-# SQM
-ENABLE_SQM="true"
-DOWNLOAD_SPEED="0"
-UPLOAD_SPEED="16000"
-
-# WiFi - common config
-SSID="Fiber"
-MOBILITY_DOMAIN="abba"
-
-# WiFi - 2GHz
-ENABLE_2G="true"
-CHANNEL_2G="1"
-COUNTRY_2G="US"
-MODE_2G="HE20"
-RADIO_2G="0"
-
-# WiFi - 5GHz
-ENABLE_5G="true"
-CHANNEL_5G="36"
-COUNTRY_5G="US"
-MODE_5G="HE80"
-RADIO_5G="1"
-
-# Time zone
-ZONENAME="Europe/Warsaw"
-TIMEZONE="CET-1CEST,M3.5.0,M10.5.0/3"
-
-# DNS
-DNS_1="1.1.1.1"
-DNS_2="1.0.0.1"
-DNS6_1="2606:4700:4700::1111"
-DNS6_2="2606:4700:4700::1001"
-
-# Target device
-RELEASE="snapshot"
-TARGET="ramips/mt7621"
-PROFILE="totolink_x5000r"
-
-# Packages & theme
-PACKAGES="luci-ssl luci-app-sqm"
-THEME="bootstrap-dark"
-
-###
-
-### Exit on failure & pretty printing
-
-if [[ $EXIT_ON_FAIL == "true" ]]; then
-    set -e
-fi
-
-info () { echo -e "\e[32m[INFO]\e[0m ${1}" ; }
-error () { echo -e "\e[31m[INFO]\e[0m ${1}" ; }
-
-###
+source common.sh
 
 ### Download the image builder
 
-if [[ $BUILDER_REDOWNLOAD == "true" || ! -d "builder/" ]]; then
-    if [[ $RELEASE == "snapshot" ]]; then
-        builder_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
-    else
-        builder_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.xz"
-    fi
+rm -rf builder
 
-    info "Downloading the image builder"
-    wget -O builder.tar.xz $builder_link
-
-    info "Extracting the image builder"
-    mkdir -p builder
-    tar xf builder.tar.xz --strip=1 -C ./builder
-
-    info "Deleting the archive"
-    rm builder.tar.xz
+if [[ $RELEASE == "snapshot" ]]; then
+    builder_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
+else
+    builder_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.xz"
 fi
 
-###
+info "Downloading the image builder"
+wget -O builder.tar.xz $builder_link
 
-### Install dependencies
+info "Extracting the image builder"
+mkdir -p builder
+tar xf builder.tar.xz --strip=1 -C ./builder
 
-if [[ $INSTALL_DEPENDENCIES == "true" ]]; then
-    if [[ -e /etc/arch-release ]]; then
-        os="arch"
-    else
-        error "Your operating system is unsupported"
-        exit 1
-    fi
-
-    if [[ $os == "arch" ]]; then
-        info "Installing dependencies for Arch Linux"
-        sudo pacman -S --needed --noconfirm \
-        base-devel ncurses zlib gawk git gettext openssl libxslt wget unzip python \
-        rsync ca-certificates
-    fi
-fi
+info "Deleting the archive"
+rm builder.tar.xz
 
 ###
 
@@ -141,7 +47,6 @@ default_radio_5g="default_${radio_5g}"
 
 ### Generate the config
 
-rm -rf builder/config
 mkdir -p builder/config/etc/uci-defaults/
 chmod 755 builder/config/etc/uci-defaults/
 
@@ -192,7 +97,7 @@ if [ $ENABLE_2G == "true" ]; then
     uci set wireless.${radio_2g}.channel="$CHANNEL_2G"
     uci set wireless.${radio_2g}.htmode="$MODE_2G"
 
-    uci set wireless.${default_radio_2g}.encryption="sae-mixed"
+    uci set wireless.${default_radio_2g}.encryption="psk2"
     uci set wireless.${default_radio_2g}.key="$wifi_password"
 
     uci set wireless.${default_radio_2g}.ieee80211r="1"
@@ -210,7 +115,7 @@ if [ $ENABLE_5G == "true" ]; then
     uci set wireless.${radio_5g}.channel="$CHANNEL_5G"
     uci set wireless.${radio_5g}.htmode="$MODE_5G"
 
-    uci set wireless.${default_radio_5g}.encryption="sae-mixed"
+    uci set wireless.${default_radio_5g}.encryption="psk2"
     uci set wireless.${default_radio_5g}.key="$wifi_password"
 
     uci set wireless.${default_radio_5g}.ieee80211r="1"
