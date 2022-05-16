@@ -50,6 +50,11 @@ default_radio_5g="default_${radio_5g}"
 mkdir -p builder/config/etc/uci-defaults/
 chmod 755 builder/config/etc/uci-defaults/
 
+# That's a pretty weird solution!
+# Reason - it's adapted from a simple uci-defaults script,
+# where all the variables were configured directly in the script.
+# I'll make it prettier one day
+
 cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 #!/bin/sh
 
