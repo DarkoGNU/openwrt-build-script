@@ -17,6 +17,9 @@ UPLOAD_SPEED="16000"
 SSID="Fiber"
 MOBILITY_DOMAIN="abba"
 
+LEGACY="true"
+LEGACY_SSID="Printer"
+
 # WiFi - 2GHz
 ENABLE_2G="true"
 CHANNEL_2G="6"
@@ -42,7 +45,7 @@ DNS6_1="2606:4700:4700::1111"
 DNS6_2="2606:4700:4700::1001"
 
 # Target device
-RELEASE="21.02.2"
+RELEASE="snapshot"
 TARGET="ramips/mt7621"
 PROFILE="netgear_r6220"
 

@@ -17,6 +17,9 @@ UPLOAD_SPEED="16000"
 SSID="Fiber"
 MOBILITY_DOMAIN="abba"
 
+LEGACY="true"
+LEGACY_SSID="Printer"
+
 # WiFi - 2GHz
 ENABLE_2G="true"
 CHANNEL_2G="1"

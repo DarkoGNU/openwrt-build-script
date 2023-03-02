@@ -43,6 +43,8 @@ default_radio_2g="default_${radio_2g}"
 radio_5g="radio${RADIO_5G}"
 default_radio_5g="default_${radio_5g}"
 
+legacy_2g="wifinet2"
+
 ###
 
 ### Generate the config
@@ -57,6 +59,15 @@ chmod 755 builder/config/etc/uci-defaults/
 
 cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 #!/bin/sh
+
+apply () {
+    # Apply changes
+    uci commit
+
+    # Reload stuff
+    /etc/init.d/network reload
+    /etc/init.d/sqm reload
+}
 
 # System info
 uci set system.@system[0].hostname="$HOSTNAME"
@@ -113,6 +124,20 @@ if [ $ENABLE_2G == "true" ]; then
     uci set wireless.${radio_2g}.disabled="0"
 fi
 
+# WiFi Legacy
+if [ $LEGACY == "true" ] && [ $ENABLE_2G == "true" ]; then
+    uci set wireless.${legacy_2g}="wifi-iface"
+    uci set wireless.${legacy_2g}.device="$radio_2g"
+
+    uci set wireless.${legacy_2g}.mode="ap"
+    uci set wireless.${legacy_2g}.ssid="$LEGACY_SSID"
+
+    uci set wireless.${legacy_2g}.encryption="psk-mixed"
+    uci set wireless.${legacy_2g}.key="$wifi_password"
+
+    uci set wireless.${legacy_2g}.network="lan"
+fi
+
 # WiFi 5G
 if [ $ENABLE_5G == "true" ]; then
     uci set wireless.${default_radio_5g}.ssid="$SSID"
@@ -161,12 +186,8 @@ if [ $IS_HOTSPOT == "true" ]; then
     uci add_list network.lan.dns="$GATEWAY"
 fi
 
-# Apply changes
-uci commit
-
-# Reload stuff
-/etc/init.d/network reload
-/etc/init.d/sqm reload
+# Make sure all changes are applied
+apply
 
 # The end
 exit 0
