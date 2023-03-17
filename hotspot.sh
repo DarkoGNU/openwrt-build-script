@@ -45,7 +45,7 @@ DNS6_1="2606:4700:4700::1111"
 DNS6_2="2606:4700:4700::1001"
 
 # Target device
-RELEASE="snapshot"
+RELEASE="22.03.3"
 TARGET="ramips/mt7621"
 PROFILE="netgear_r6220"
 
