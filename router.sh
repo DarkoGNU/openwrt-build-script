@@ -31,7 +31,7 @@ RADIO_2G="0"
 ENABLE_5G="true"
 CHANNEL_5G="36"
 COUNTRY_5G="US"
-MODE_5G="HE80"
+MODE_5G="HE160"
 RADIO_5G="1"
 
 # Time zone
@@ -46,8 +46,8 @@ DNS6_2="2606:4700:4700::1001"
 
 # Target device
 RELEASE="snapshot"
-TARGET="ramips/mt7621"
-PROFILE="totolink_x5000r"
+TARGET="mediatek/filogic"
+PROFILE="xiaomi_redmi-router-ax6000-stock"
 
 # Packages & theme
 PACKAGES="luci-ssl luci-app-sqm"
