@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source common.sh
+source functions.sh
 
 ### Determine the operating system
 
