@@ -29,4 +29,3 @@ PROFILE="xiaomi_redmi-router-ax6000-stock"
 source build.sh
 
 ###
-

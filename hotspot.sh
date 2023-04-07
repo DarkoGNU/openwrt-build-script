@@ -9,18 +9,18 @@ IS_HOTSPOT="true"
 
 # WiFi - 2GHz
 CHANNEL_2G="6"
-MODE_2G="HT20"
+MODE_2G="HE20"
 RADIO_2G="0"
 
 # WiFi - 5GHz
 CHANNEL_5G="149"
-MODE_5G="VHT80"
+MODE_5G="HE80"
 RADIO_5G="1"
 
 # Target device
 RELEASE="snapshot"
 TARGET="ramips/mt7621"
-PROFILE="netgear_r6220"
+PROFILE="totolink_x5000r"
 
 ###
 
@@ -29,4 +29,3 @@ PROFILE="netgear_r6220"
 source build.sh
 
 ###
-
