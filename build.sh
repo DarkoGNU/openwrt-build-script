@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source functions.sh
 source common.sh
 
 ### Download the image builder
@@ -13,14 +14,14 @@ else
 fi
 
 info "Downloading the image builder"
-wget -O builder.tar.xz "$builder_link"
+#wget -O builder.tar.xz "$builder_link"
 
 info "Extracting the image builder"
 mkdir -p builder
-tar xf builder.tar.xz --strip=1 -C ./builder
+#tar xf builder.tar.xz --strip=1 -C ./builder
 
 info "Deleting the archive"
-rm builder.tar.xz
+#rm builder.tar.xz
 
 ###
 
@@ -67,19 +68,19 @@ uci set system.@system[0].timezone="$TIMEZONE"
 
 EOL
 
-if [ $IS_HOTSPOT == "false" ]; then
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
+if [[ $IS_HOTSPOT == "false" ]]; then
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 uci set system.@system[0].description="Routes packets and provides WiFi!"
 
 EOL
 else
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 uci set system.@system[0].description="Provides WiFi!"
 
 EOL
 fi
 
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # Root password
 echo -e "${root_password}\n${root_password}" | passwd
 
@@ -108,13 +109,10 @@ uci add_list network.wan6.dns="$DNS6_2"
 
 EOL
 
+if [[ $ENABLE_2G == "true" ]]; then
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # WiFi 2G
-if [ $ENABLE_2G == "true" ]; 
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 uci set wireless.${default_radio_2g}.ssid="$SSID"
-uci set wireless.${radio_2g}.country="$COUNTRY_2G"
-uci set wireless.${radio_2g}.channel="$CHANNEL_2G"
-uci set wireless.${radio_2g}.htmode="$MODE_2G"
 
 uci set wireless.${default_radio_2g}.encryption="psk2"
 uci set wireless.${default_radio_2g}.key="$wifi_password"
@@ -127,13 +125,10 @@ uci set wireless.${default_radio_2g}.mobility_domain="$MOBILITY_DOMAIN"
 EOL
 fi
 
+if [[ $ENABLE_5G == "true" ]]; then
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # WiFi 5G
-if [ $ENABLE_5G == "true" ]; then
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 uci set wireless.${default_radio_5g}.ssid="$SSID"
-uci set wireless.${radio_5g}.country="$COUNTRY_5G"
-uci set wireless.${radio_5g}.channel="$CHANNEL_5G"
-uci set wireless.${radio_5g}.htmode="$MODE_5G"
 
 uci set wireless.${default_radio_5g}.encryption="psk2"
 uci set wireless.${default_radio_5g}.key="$wifi_password"
@@ -146,9 +141,9 @@ uci set wireless.${default_radio_5g}.mobility_domain="$MOBILITY_DOMAIN"
 EOL
 fi
 
+if [[ $LEGACY == "true" ]] && [[ $ENABLE_2G == "true" ]]; then
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # WiFi Legacy
-if [ $LEGACY == "true" ] && [ $ENABLE_2G == "true" ]; then
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 uci set wireless.${legacy_2g}="wifi-iface"
 uci set wireless.${legacy_2g}.device="$radio_2g"
 
@@ -163,44 +158,51 @@ uci set wireless.${legacy_2g}.network="lan"
 EOL
 fi
 
-# General WiFi config
-if [ $ENABLE_2G == "true" ] || [ $ENABLE_2G_ALT == "true" ] || [ $ENABLE_2G_LEGACY == "true" ]; then
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
+if [[ $ENABLE_2G == "true" ]] || [[ $ENABLE_2G_ALT == "true" ]] || [[ $ENABLE_2G_LEGACY == "true" ]]; then
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
+# General WiFi 2G config
 uci set wireless.${radio_2g}.disabled="0"
+uci set wireless.${radio_2g}.country="$COUNTRY_2G"
+uci set wireless.${radio_2g}.channel="$CHANNEL_2G"
+uci set wireless.${radio_2g}.htmode="$MODE_2G"
 
 EOL
 fi
 
-if [ $ENABLE_5G == "true" ] || [ $ENABLE_5G_ALT == "true" ] || [ $ENABLE_5G_LEGACY == "true" ]; then
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
+if [[ $ENABLE_5G == "true" ]] || [[ $ENABLE_5G_ALT == "true" ]] || [[ $ENABLE_5G_LEGACY == "true" ]]; then
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
+# General WiFi 5G config
 uci set wireless.${radio_5g}.disabled="0"
+uci set wireless.${radio_5g}.country="$COUNTRY_5G"
+uci set wireless.${radio_5g}.channel="$CHANNEL_5G"
+uci set wireless.${radio_5g}.htmode="$MODE_5G"
 
 EOL
 fi
 
+if [[ $ENABLE_SQM == "true" ]] && [[ $IS_HOTSPOT == "false" ]]; then
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # SQM
-if [ $ENABLE_SQM == "true" ] && [ $IS_HOTSPOT == "false" ]; then
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 uci set sqm.eth1.enabled="1"
 
 EOL
 else
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 uci set sqm.eth1.enabled="0"
 
 EOL
 fi
 
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 uci set sqm.eth1.interface="wan"
 uci set sqm.eth1.download="$DOWNLOAD_SPEED"
 uci set sqm.eth1.upload="$UPLOAD_SPEED"
 
 EOL
 
+if [[ $IS_HOTSPOT == "true" ]]; then
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # Configure a hotspot
-if [ $IS_HOTSPOT == "true" ]; then
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 /etc/init.d/sqm disable
 /etc/init.d/sqm stop
 
@@ -220,29 +222,28 @@ uci add_list network.lan.dns="$GATEWAY"
 EOL
 fi
 
-# Make sure all changes are applied
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # Apply changes
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 uci commit
 
 EOL
 
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # Reload stuff
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 /etc/init.d/network reload
 /etc/init.d/sqm reload
 
 EOL
 
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # The end
-cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 exit 0
 
 EOL
 
 chmod 755 builder/config/etc/uci-defaults/99-autoconf
 
-if [ -d secrets/ssh ]; then
+if [[ -d secrets/ssh ]]; then
     mkdir -p builder/config/etc/dropbear/
     chmod 700 builder/config/etc/dropbear/
 
@@ -253,7 +254,7 @@ fi
 ###
 
 ### Actually build the image
-
+exit
 cd builder/
 
 rm -rf images/
