@@ -109,6 +109,13 @@ uci add_list network.wan6.dns="$DNS6_2"
 
 EOL
 
+cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
+# Remove default WiFi interfaces
+uci del wireless.default_radio0
+uci del wireless.default_radio1
+
+EOL
+
 if [[ $ENABLE_2G == "true" ]]; then
 cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # WiFi 2G
