@@ -39,16 +39,7 @@ root_password=$(<secrets/root_password)
 wifi_password=$(<secrets/wifi_password)
 
 radio_2g="radio${RADIO_2G}"
-default_radio_2g="default_${radio_2g}"
-
 radio_5g="radio${RADIO_5G}"
-default_radio_5g="default_${radio_5g}"
-
-legacy_2g="wifinet2"
-legacy_5g="wifinet3"
-
-alt_2g="wifinet2"
-alt_5g="wifinet3"
 
 ###
 
@@ -119,15 +110,19 @@ EOL
 if [[ $ENABLE_2G == "true" ]]; then
 cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # WiFi 2G
-uci set wireless.${default_radio_2g}.ssid="$SSID"
+uci set wireless.main_2g="wifi-iface"
 
-uci set wireless.${default_radio_2g}.encryption="psk2"
-uci set wireless.${default_radio_2g}.key="$wifi_password"
+uci set wireless.main_2g.ssid="$SSID"
+uci set wireless.main_2g.device="$radio_2g"
+uci set wireless.main_2g.mode="ap"
 
-uci set wireless.${default_radio_2g}.ieee80211r="1"
-uci set wireless.${default_radio_2g}.ft_over_ds="1"
-uci set wireless.${default_radio_2g}.ft_psk_generate_local="1"
-uci set wireless.${default_radio_2g}.mobility_domain="$MOBILITY_DOMAIN"
+uci set wireless.main_2g.encryption="psk2"
+uci set wireless.main_2g.key="$wifi_password"
+
+uci set wireless.main_2g.ieee80211r="1"
+uci set wireless.main_2g.ft_over_ds="1"
+uci set wireless.main_2g.ft_psk_generate_local="1"
+uci set wireless.main_2g.mobility_domain="$MOBILITY_DOMAIN"
 
 EOL
 fi
@@ -135,15 +130,19 @@ fi
 if [[ $ENABLE_5G == "true" ]]; then
 cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # WiFi 5G
-uci set wireless.${default_radio_5g}.ssid="$SSID"
+uci set wireless.main_5g="wifi-iface"
 
-uci set wireless.${default_radio_5g}.encryption="psk2"
-uci set wireless.${default_radio_5g}.key="$wifi_password"
+uci set wireless.main_5g.ssid="$SSID"
+uci set wireless.main_5g.device="$radio_2g"
+ uci set wireless.main_5g.mode="ap"
 
-uci set wireless.${default_radio_5g}.ieee80211r="1"
-uci set wireless.${default_radio_5g}.ft_over_ds="1"
-uci set wireless.${default_radio_5g}.ft_psk_generate_local="1"
-uci set wireless.${default_radio_5g}.mobility_domain="$MOBILITY_DOMAIN"
+uci set wireless.main_5g.encryption="psk2"
+uci set wireless.main_5g.key="$wifi_password"
+
+uci set wireless.main_5g.ieee80211r="1"
+uci set wireless.main_5g.ft_over_ds="1"
+uci set wireless.main_5g.ft_psk_generate_local="1"
+uci set wireless.main_5g.mobility_domain="$MOBILITY_DOMAIN"
 
 EOL
 fi
