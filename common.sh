@@ -22,7 +22,7 @@ ENABLE_2G="true"
 ENABLE_5G="true"
 
 # WiFi - 2GHz Alt
-ENABLE_2G_ALT="true"
+ENABLE_2G_ALT="false"
 SSID_2G_ALT="${SSID}2G"
 MOBILITY_DOMAIN_2G_ALT="abb2"
 
@@ -35,7 +35,7 @@ MOBILITY_DOMAIN_5G_ALT="abb5"
 LEGACY="true"
 SSID_LEGACY="Legacy"
 ENABLE_2G_LEGACY="true"
-ENABLE_5G_LEGACY="true"
+ENABLE_5G_LEGACY="false"
 
 # Time zone
 ZONENAME="Europe/Warsaw"

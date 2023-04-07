@@ -65,6 +65,15 @@ uci set wireless.${1}.device="${3}"
 uci set wireless.${1}.encryption="psk2"
 uci set wireless.${1}.key="${4}"
 
+uci set wireless.bss_transition '1'
+uci set wireless.time_advertisement '2'
+uci set wireless.time_zone 'GMT0'
+uci set wireless.wnm_sleep_mode '1'
+
+uci set wireless.ieee80211k '1'
+uci set wireless.rrm_neighbor_report '1'
+uci set wireless.rrm_beacon_report '1'
+
 uci set wireless.${1}.ieee80211r="1"
 uci set wireless.${1}.ft_over_ds="1"
 uci set wireless.${1}.ft_psk_generate_local="1"
@@ -88,6 +97,15 @@ uci set wireless.${1}.device="${3}"
 
 uci set wireless.${1}.encryption="psk-mixed"
 uci set wireless.${1}.key="${4}"
+
+uci set wireless.bss_transition '1'
+uci set wireless.time_advertisement '2'
+uci set wireless.time_zone 'GMT0'
+uci set wireless.wnm_sleep_mode '1'
+
+uci set wireless.ieee80211k '1'
+uci set wireless.rrm_neighbor_report '1'
+uci set wireless.rrm_beacon_report '1'
 
 EOL
 }
