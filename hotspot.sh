@@ -18,7 +18,7 @@ MODE_5G="VHT80"
 RADIO_5G="1"
 
 # Target device
-RELEASE="22.03.3"
+RELEASE="snapshot"
 TARGET="ramips/mt7621"
 PROFILE="netgear_r6220"
 

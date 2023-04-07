@@ -48,7 +48,9 @@ DNS6_1="2606:4700:4700::1111"
 DNS6_2="2606:4700:4700::1001"
 
 # Packages & theme
-PACKAGES="luci-ssl luci-app-sqm"
+PACKAGES="luci-ssl luci-app-sqm wpad-mbedtls"
+WPAD_REMOVED="-wpad -wpad-basic -wpad-basic-mbedtls -wpad-basic-openssl -wpad-basic-wolfssl -wpad-mesh-mbedtls -wpad-mesh-openssl -wpad-mesh-wolfssl -wpad-mini -wpad-openssl -wpad-wolfssl"
+REMOVED_PACKAGES="$WPAD_REMOVED"
 THEME="bootstrap-dark"
 
 ###

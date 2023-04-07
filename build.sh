@@ -67,7 +67,7 @@ uci set wireless.${1}.key="${4}"
 
 uci set wireless.bss_transition '1'
 uci set wireless.time_advertisement '2'
-uci set wireless.time_zone 'GMT0'
+uci set wireless.time_zone '$TIMEZONE'
 uci set wireless.wnm_sleep_mode '1'
 
 uci set wireless.ieee80211k '1'
@@ -100,7 +100,7 @@ uci set wireless.${1}.key="${4}"
 
 uci set wireless.bss_transition '1'
 uci set wireless.time_advertisement '2'
-uci set wireless.time_zone 'GMT0'
+uci set wireless.time_zone '$TIMEZONE'
 uci set wireless.wnm_sleep_mode '1'
 
 uci set wireless.ieee80211k '1'
@@ -278,6 +278,7 @@ uci set sqm.eth1.enabled="1"
 EOL
 else
 cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
+# SQM
 uci set sqm.eth1.enabled="0"
 
 EOL
@@ -339,7 +340,7 @@ cd builder/
 
 rm -rf images/
 make clean
-make image PROFILE="$PROFILE" PACKAGES="$PACKAGES" EXTRA_IMAGE_NAME="$HOSTNAME" FILES="${PWD}/config/" BIN_DIR="${PWD}/images/"
+make image PROFILE="$PROFILE" PACKAGES="$PACKAGES $REMOVED_PACKAGES" EXTRA_IMAGE_NAME="$HOSTNAME" FILES="${PWD}/config/" BIN_DIR="${PWD}/images/"
 
 cd ..
 mkdir -p images/
