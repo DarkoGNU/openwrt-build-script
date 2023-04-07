@@ -52,4 +52,3 @@ PACKAGES="luci-ssl luci-app-sqm"
 THEME="bootstrap-dark"
 
 ###
-

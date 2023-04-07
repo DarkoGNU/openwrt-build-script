@@ -14,14 +14,14 @@ else
 fi
 
 info "Downloading the image builder"
-#wget -O builder.tar.xz "$builder_link"
+wget -O builder.tar.xz "$builder_link"
 
 info "Extracting the image builder"
 mkdir -p builder
-#tar xf builder.tar.xz --strip=1 -C ./builder
+tar xf builder.tar.xz --strip=1 -C ./builder
 
 info "Deleting the archive"
-#rm builder.tar.xz
+rm builder.tar.xz
 
 ###
 
@@ -41,6 +41,57 @@ wifi_password=$(<secrets/wifi_password)
 radio_2g="radio${RADIO_2G}"
 radio_5g="radio${RADIO_5G}"
 
+country_2g="$COUNTRY"
+country_5g="$COUNTRY"
+
+###
+
+### Additional functions
+
+main_wifi_config () {
+# Argument 1  - interface name
+# Argument 2 - SSID
+# Argument 3 - radio
+# Argument 4 - password
+# Argument 5 - mobility domain
+cat << EOL
+uci set wireless.${1}="wifi-iface"
+uci set wireless.${1}.network="lan"
+uci set wireless.${1}.mode="ap"
+
+uci set wireless.${1}.ssid="${2}"
+uci set wireless.${1}.device="${3}"
+
+uci set wireless.${1}.encryption="psk2"
+uci set wireless.${1}.key="${4}"
+
+uci set wireless.${1}.ieee80211r="1"
+uci set wireless.${1}.ft_over_ds="1"
+uci set wireless.${1}.ft_psk_generate_local="1"
+uci set wireless.${1}.mobility_domain="${5}"
+
+EOL
+}
+
+legacy_wifi_config () {
+# Argument 1  - interface name
+# Argument 2 - SSID
+# Argument 3 - radio
+# Argument 4 - password
+cat << EOL
+uci set wireless.${1}="wifi-iface"
+uci set wireless.${1}.network="lan"
+uci set wireless.${1}.mode="ap"
+
+uci set wireless.${1}.ssid="${2}"
+uci set wireless.${1}.device="${3}"
+
+uci set wireless.${1}.encryption="psk-mixed"
+uci set wireless.${1}.key="${4}"
+
+EOL
+}
+
 ###
 
 ### Generate the config
@@ -48,9 +99,17 @@ radio_5g="radio${RADIO_5G}"
 mkdir -p builder/config/etc/uci-defaults/
 chmod 755 builder/config/etc/uci-defaults/
 
-
 cat > builder/config/etc/uci-defaults/99-autoconf << EOL
 #!/bin/sh
+
+apply () {
+    # Apply changes
+    uci commit
+
+    # Reload stuff
+    /etc/init.d/network reload
+    /etc/init.d/sqm reload
+}
 
 # System info
 uci set system.@system[0].hostname="$HOSTNAME"
@@ -108,67 +167,74 @@ uci del wireless.default_radio1
 EOL
 
 if [[ $ENABLE_2G == "true" ]]; then
-cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
-# WiFi 2G
-uci set wireless.main_2g="wifi-iface"
-
-uci set wireless.main_2g.ssid="$SSID"
-uci set wireless.main_2g.device="$radio_2g"
-uci set wireless.main_2g.mode="ap"
-
-uci set wireless.main_2g.encryption="psk2"
-uci set wireless.main_2g.key="$wifi_password"
-
-uci set wireless.main_2g.ieee80211r="1"
-uci set wireless.main_2g.ft_over_ds="1"
-uci set wireless.main_2g.ft_psk_generate_local="1"
-uci set wireless.main_2g.mobility_domain="$MOBILITY_DOMAIN"
-
-EOL
+echo "# WiFi 2G" >> builder/config/etc/uci-defaults/99-autoconf
+printf "$(main_wifi_config \
+    main_2g \
+    $SSID \
+    $radio_2g \
+    $wifi_password \
+    $MOBILITY_DOMAIN)\n\n" \
+    >> builder/config/etc/uci-defaults/99-autoconf
 fi
 
 if [[ $ENABLE_5G == "true" ]]; then
-cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
-# WiFi 5G
-uci set wireless.main_5g="wifi-iface"
-
-uci set wireless.main_5g.ssid="$SSID"
-uci set wireless.main_5g.device="$radio_2g"
- uci set wireless.main_5g.mode="ap"
-
-uci set wireless.main_5g.encryption="psk2"
-uci set wireless.main_5g.key="$wifi_password"
-
-uci set wireless.main_5g.ieee80211r="1"
-uci set wireless.main_5g.ft_over_ds="1"
-uci set wireless.main_5g.ft_psk_generate_local="1"
-uci set wireless.main_5g.mobility_domain="$MOBILITY_DOMAIN"
-
-EOL
+echo "# WiFi 5G" >> builder/config/etc/uci-defaults/99-autoconf
+printf "$(main_wifi_config \
+    main_5g \
+    $SSID \
+    $radio_5g \
+    $wifi_password \
+    $MOBILITY_DOMAIN)\n\n" \
+    >> builder/config/etc/uci-defaults/99-autoconf
 fi
 
-if [[ $LEGACY == "true" ]] && [[ $ENABLE_2G == "true" ]]; then
-cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
-# WiFi Legacy
-uci set wireless.${legacy_2g}="wifi-iface"
-uci set wireless.${legacy_2g}.device="$radio_2g"
+if [[ $ENABLE_2G_ALT == "true" ]]; then
+echo "# WiFi 2G Alt" >> builder/config/etc/uci-defaults/99-autoconf
+printf "$(main_wifi_config \
+    alt_2g \
+    $SSID_2G_ALT \
+    $radio_2g \
+    $wifi_password \
+    $MOBILITY_DOMAIN_2G_ALT)\n\n" \
+    >> builder/config/etc/uci-defaults/99-autoconf
+fi
 
-uci set wireless.${legacy_2g}.mode="ap"
-uci set wireless.${legacy_2g}.ssid="$LEGACY_SSID"
+if [[ $ENABLE_5G_ALT == "true" ]]; then
+echo "# WiFi 5G Alt" >> builder/config/etc/uci-defaults/99-autoconf
+printf "$(main_wifi_config \
+    alt_5g \
+    $SSID_5G_ALT \
+    $radio_5g \
+    $wifi_password \
+    $MOBILITY_DOMAIN_5G_ALT)\n\n" \
+    >> builder/config/etc/uci-defaults/99-autoconf
+fi
 
-uci set wireless.${legacy_2g}.encryption="psk-mixed"
-uci set wireless.${legacy_2g}.key="$wifi_password"
+if [[ $ENABLE_2G_LEGACY == "true" ]]; then
+echo "# WiFi 2G Legacy" >> builder/config/etc/uci-defaults/99-autoconf
+printf "$(legacy_wifi_config \
+    legacy_2g \
+    $SSID_LEGACY \
+    $radio_2g \
+    $wifi_password)\n\n" \
+    >> builder/config/etc/uci-defaults/99-autoconf
+fi
 
-uci set wireless.${legacy_2g}.network="lan"
-
-EOL
+if [[ $ENABLE_5G_LEGACY == "true" ]]; then
+echo "# WiFi 5G Legacy" >> builder/config/etc/uci-defaults/99-autoconf
+printf "$(legacy_wifi_config \
+    legacy_5g \
+    $SSID_LEGACY \
+    $radio_5g \
+    $wifi_password)\n\n" \
+    >> builder/config/etc/uci-defaults/99-autoconf
 fi
 
 if [[ $ENABLE_2G == "true" ]] || [[ $ENABLE_2G_ALT == "true" ]] || [[ $ENABLE_2G_LEGACY == "true" ]]; then
 cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # General WiFi 2G config
 uci set wireless.${radio_2g}.disabled="0"
-uci set wireless.${radio_2g}.country="$COUNTRY_2G"
+uci set wireless.${radio_2g}.country="$country_2g"
 uci set wireless.${radio_2g}.channel="$CHANNEL_2G"
 uci set wireless.${radio_2g}.htmode="$MODE_2G"
 
@@ -179,7 +245,7 @@ if [[ $ENABLE_5G == "true" ]] || [[ $ENABLE_5G_ALT == "true" ]] || [[ $ENABLE_5G
 cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # General WiFi 5G config
 uci set wireless.${radio_5g}.disabled="0"
-uci set wireless.${radio_5g}.country="$COUNTRY_5G"
+uci set wireless.${radio_5g}.country="$country_5g"
 uci set wireless.${radio_5g}.channel="$CHANNEL_5G"
 uci set wireless.${radio_5g}.htmode="$MODE_5G"
 
@@ -229,19 +295,9 @@ EOL
 fi
 
 cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
-# Apply changes
-uci commit
+# Make sure all changes are applied
+apply
 
-EOL
-
-cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
-# Reload stuff
-/etc/init.d/network reload
-/etc/init.d/sqm reload
-
-EOL
-
-cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # The end
 exit 0
 
@@ -260,7 +316,7 @@ fi
 ###
 
 ### Actually build the image
-exit
+
 cd builder/
 
 rm -rf images/
