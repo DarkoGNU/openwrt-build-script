@@ -13,14 +13,14 @@ MODE_2G="HE20"
 RADIO_2G="0"
 
 # WiFi - 5GHz
-CHANNEL_5G="149"
-MODE_5G="HE80"
+CHANNEL_5G="100"
+MODE_5G="HE160"
 RADIO_5G="1"
 
 # Target device
 RELEASE="snapshot"
-TARGET="ramips/mt7621"
-PROFILE="totolink_x5000r"
+TARGET="mediatek/filogic"
+PROFILE="xiaomi_redmi-router-ax6000-stock"
 
 ###
 
