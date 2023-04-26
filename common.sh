@@ -13,7 +13,7 @@ UPLOAD_SPEED="16000"
 # WiFi - common config
 SSID="Fiber"
 MOBILITY_DOMAIN="abba"
-COUNTRY="US"
+COUNTRY="PL"
 
 # WiFi - 2GHz Main
 ENABLE_2G="true"
