@@ -152,9 +152,6 @@ cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
 # Root password
 echo -e "${root_password}\n${root_password}" | passwd
 
-# LUCI theme
-uci set luci.main.mediaurlbase="/luci-static/$THEME"
-
 # Redirect to HTTPS
 uci set uhttpd.main.redirect_https="on"
 
