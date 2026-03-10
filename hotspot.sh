@@ -17,8 +17,14 @@ CHANNEL_5G="100"
 MODE_5G="HE160"
 RADIO_5G="1"
 
+# WiFi - legacy
+LEGACY="true"
+SSID_LEGACY="Legacy-2"
+ENABLE_2G_LEGACY="true"
+ENABLE_5G_LEGACY="false"
+
 # Target device
-RELEASE="snapshot"
+RELEASE="25.12.0"
 TARGET="mediatek/filogic"
 PROFILE="xiaomi_redmi-router-ax6000-stock"
 
