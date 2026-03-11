@@ -3,25 +3,28 @@
 source functions.sh
 source common.sh
 
-### Download the image builder
-
-rm -rf builder
+### Download and extract the image builder
 
 if [[ $RELEASE == "snapshot" ]]; then
-    builder_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.xz"
+    builder_link="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-imagebuilder-${TARGET////-}.Linux-x86_64.tar.zst"
 else
-    builder_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.xz"
+    builder_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.zst"
 fi
 
-info "Downloading the image builder"
-wget -O builder.tar.xz "$builder_link"
+# builder_archive
+# builder_base
 
-info "Extracting the image builder"
-mkdir -p builder
-tar xf builder.tar.xz --strip=1 -C ./builder
+if [[ ! -e "$builder_archive" ]]; then
+    info "Downloading the image builder"
+    wget --content-disposition "$builder_link"
 
-info "Deleting the archive"
-rm builder.tar.xz
+    info "Extracting the image builder"
+    mkdir -p builder
+    tar xf builder.tar.zst --strip=1 -C ./builder
+
+    info "Deleting the archive"
+    rm builder.tar.zst
+fi
 
 ###
 
