@@ -21,6 +21,9 @@ images/*
 # Secrets
 secrets/*
 
+# Compressed builder archives
+*.tar.zst
+
 # Vim.gitignore
 # Swap
 [._]*.s[a-v][a-z]
