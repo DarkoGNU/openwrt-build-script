@@ -23,6 +23,7 @@ secrets/*
 
 # Compressed builder archives
 *.tar.zst
+*.tar.zst.*
 
 # Vim.gitignore
 # Swap
