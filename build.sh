@@ -11,19 +11,20 @@ else
     builder_link="https://downloads.openwrt.org/releases/${RELEASE}/targets/${TARGET}/openwrt-imagebuilder-${RELEASE}-${TARGET////-}.Linux-x86_64.tar.zst"
 fi
 
-# builder_archive
-# builder_base
+builder_archive=$(basename "$builder_link")
 
-if [[ ! -e "$builder_archive" ]]; then
-    info "Downloading the image builder"
-    wget --content-disposition "$builder_link"
+if [[ ! -d "builder" ]]; then
+    if [[ ! -e "$builder_archive" ]]; then
+        info "Downloading the image builder"
+        wget --content-disposition "$builder_link"
+    fi
 
     info "Extracting the image builder"
     mkdir -p builder
-    tar xf builder.tar.zst --strip=1 -C ./builder
+    tar xf "$builder_archive" --strip=1 -C ./builder
 
-    info "Deleting the archive"
-    rm builder.tar.zst
+    # info "Deleting the archive"
+    # rm "$builder_archive"
 fi
 
 ###
@@ -65,7 +66,7 @@ uci set wireless.${1}.mode="ap"
 uci set wireless.${1}.ssid="${2}"
 uci set wireless.${1}.device="${3}"
 
-uci set wireless.${1}.encryption="psk2"
+uci set wireless.${1}.encryption="sae-mixed"
 uci set wireless.${1}.key="${4}"
 
 uci set wireless.${1}.bss_transition='1'
@@ -98,7 +99,7 @@ uci set wireless.${1}.mode="ap"
 uci set wireless.${1}.ssid="${2}"
 uci set wireless.${1}.device="${3}"
 
-uci set wireless.${1}.encryption="psk-mixed"
+uci set wireless.${1}.encryption="psk2"
 uci set wireless.${1}.key="${4}"
 
 uci set wireless.${1}.bss_transition='1'

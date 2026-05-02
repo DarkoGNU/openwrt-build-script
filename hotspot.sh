@@ -24,7 +24,7 @@ ENABLE_2G_LEGACY="true"
 ENABLE_5G_LEGACY="false"
 
 # Target device
-RELEASE="25.12.0"
+RELEASE="25.12.2"
 TARGET="mediatek/filogic"
 PROFILE="xiaomi_redmi-router-ax6000-stock"
 
