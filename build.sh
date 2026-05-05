@@ -12,6 +12,7 @@ else
 fi
 
 builder_archive=$(basename "$builder_link")
+builder_dir=builder-${RELEASE}-${TARGET////-}
 
 if [[ ! -d "builder" ]]; then
     if [[ ! -e "$builder_archive" ]]; then
@@ -20,8 +21,8 @@ if [[ ! -d "builder" ]]; then
     fi
 
     info "Extracting the image builder"
-    mkdir -p builder
-    tar xf "$builder_archive" --strip=1 -C ./builder
+    mkdir -p "$builder_dir"
+    tar xf "$builder_archive" --strip=1 -C "./${builder_dir}"
 
     # info "Deleting the archive"
     # rm "$builder_archive"
@@ -31,7 +32,7 @@ fi
 
 ### Read secrets & set some variables
 
-if [ ! -f secrets/root_password ]; then
+if [ ! -f secrets/root_pw_hash ]; then
     error "Root password secret not found"
     exit 1;
 elif [ ! -f secrets/wifi_password ]; then
@@ -39,7 +40,7 @@ elif [ ! -f secrets/wifi_password ]; then
     exit 1;
 fi
 
-root_password=$(<secrets/root_password)
+root_pw_hash=$(<secrets/root_pw_hash)
 wifi_password=$(<secrets/wifi_password)
 
 radio_2g="radio${RADIO_2G}"
@@ -153,9 +154,6 @@ EOL
 fi
 
 cat >> builder/config/etc/uci-defaults/99-autoconf << EOL
-# Root password
-echo -e "${root_password}\n${root_password}" | passwd
-
 # Redirect to HTTPS
 uci set uhttpd.main.redirect_https="on"
 
@@ -189,10 +187,10 @@ if [[ $ENABLE_2G == "true" ]]; then
 echo "# WiFi 2G" >> builder/config/etc/uci-defaults/99-autoconf
 printf "$(main_wifi_config \
     main_2g \
-    $SSID \
-    $radio_2g \
-    $wifi_password \
-    $MOBILITY_DOMAIN)\n\n" \
+    "$SSID" \
+    "$radio_2g" \
+    "$wifi_password" \
+    "$MOBILITY_DOMAIN")\n\n" \
     >> builder/config/etc/uci-defaults/99-autoconf
 fi
 
@@ -200,10 +198,10 @@ if [[ $ENABLE_5G == "true" ]]; then
 echo "# WiFi 5G" >> builder/config/etc/uci-defaults/99-autoconf
 printf "$(main_wifi_config \
     main_5g \
-    $SSID \
-    $radio_5g \
-    $wifi_password \
-    $MOBILITY_DOMAIN)\n\n" \
+    "$SSID" \
+    "$radio_5g" \
+    "$wifi_password" \
+    "$MOBILITY_DOMAIN")\n\n" \
     >> builder/config/etc/uci-defaults/99-autoconf
 fi
 
@@ -211,10 +209,10 @@ if [[ $ENABLE_2G_ALT == "true" ]]; then
 echo "# WiFi 2G Alt" >> builder/config/etc/uci-defaults/99-autoconf
 printf "$(main_wifi_config \
     alt_2g \
-    $SSID_2G_ALT \
-    $radio_2g \
-    $wifi_password \
-    $MOBILITY_DOMAIN_2G_ALT)\n\n" \
+    "$SSID_2G_ALT" \
+    "$radio_2g" \
+    "$wifi_password" \
+    "$MOBILITY_DOMAIN_2G_ALT")\n\n" \
     >> builder/config/etc/uci-defaults/99-autoconf
 fi
 
@@ -222,10 +220,10 @@ if [[ $ENABLE_5G_ALT == "true" ]]; then
 echo "# WiFi 5G Alt" >> builder/config/etc/uci-defaults/99-autoconf
 printf "$(main_wifi_config \
     alt_5g \
-    $SSID_5G_ALT \
-    $radio_5g \
-    $wifi_password \
-    $MOBILITY_DOMAIN_5G_ALT)\n\n" \
+    "$SSID_5G_ALT" \
+    "$radio_5g" \
+    "$wifi_password" \
+    "$MOBILITY_DOMAIN_5G_ALT")\n\n" \
     >> builder/config/etc/uci-defaults/99-autoconf
 fi
 
@@ -233,9 +231,9 @@ if [[ $ENABLE_2G_LEGACY == "true" ]]; then
 echo "# WiFi 2G Legacy" >> builder/config/etc/uci-defaults/99-autoconf
 printf "$(legacy_wifi_config \
     legacy_2g \
-    $SSID_LEGACY \
-    $radio_2g \
-    $wifi_password)\n\n" \
+    "$SSID_LEGACY" \
+    "$radio_2g" \
+    "$wifi_password")\n\n" \
     >> builder/config/etc/uci-defaults/99-autoconf
 fi
 
@@ -243,9 +241,9 @@ if [[ $ENABLE_5G_LEGACY == "true" ]]; then
 echo "# WiFi 5G Legacy" >> builder/config/etc/uci-defaults/99-autoconf
 printf "$(legacy_wifi_config \
     legacy_5g \
-    $SSID_LEGACY \
-    $radio_5g \
-    $wifi_password)\n\n" \
+    "$SSID_LEGACY" \
+    "$radio_5g" \
+    "$wifi_password")\n\n" \
     >> builder/config/etc/uci-defaults/99-autoconf
 fi
 
@@ -323,21 +321,26 @@ exit 0
 
 EOL
 
-chmod 755 builder/config/etc/uci-defaults/99-autoconf
+chmod 755 "${builder_dir}"/config/etc/uci-defaults/99-autoconf
 
 if [[ -d secrets/ssh ]]; then
-    mkdir -p builder/config/etc/dropbear/
-    chmod 700 builder/config/etc/dropbear/
+    mkdir -p "${builder_dir}"/config/etc/dropbear/
+    chmod 700 "${builder_dir}"/config/etc/dropbear/
 
-    cp secrets/ssh/* builder/config/etc/dropbear/
-    chmod 600 builder/config/etc/dropbear/*
+    cp secrets/ssh/* "${builder_dir}"/config/etc/dropbear/
+    chmod 600 "${builder_dir}"/config/etc/dropbear/*
 fi
 
 ###
 
+# Securely inject the root password hash
+mkdir -p "${builder_dir}"/config/etc/
+echo "root:${root_pw_hash}:19240:0:99999:7:::" > "${builder_dir}"/config/etc/shadow
+chmod 600 "${builder_dir}"/config/etc/shadow
+
 ### Actually build the image
 
-cd builder/
+cd "${builder_dir}/"
 
 rm -rf images/
 make clean
@@ -345,7 +348,7 @@ make image PROFILE="$PROFILE" PACKAGES="$PACKAGES $REMOVED_PACKAGES" EXTRA_IMAGE
 
 cd ..
 mkdir -p images/
-cp builder/images/*.bin images/
+cp "${builder_dir}"/images/*.bin images/
 
 ###
 

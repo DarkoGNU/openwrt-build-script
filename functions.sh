@@ -14,6 +14,6 @@ if [[ $EXIT_ON_FAIL == "true" ]]; then
 fi
 
 info () { echo -e "\e[32m[INFO]\e[0m ${1}" ; }
-error () { echo -e "\e[31m[INFO]\e[0m ${1}" ; }
+error () { echo -e "\e[31m[ERROR]\e[0m ${1}" ; }
 
 ###

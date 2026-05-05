@@ -23,12 +23,12 @@ if [[ $os == "arch" ]]; then
     info "Installing dependencies for Arch Linux"
     sudo pacman -S --needed --noconfirm \
     base-devel ncurses zlib gawk git gettext openssl libxslt wget unzip python \
-    rsync ca-certificates
+    rsync ca-certificates zstd
 elif [[ $os == "rhel" ]]; then
     info "Installing dependencies for Red Hat Enterprise Linux"
     sudo dnf install git gawk gettext ncurses-devel zlib-devel \
     openssl-devel libxslt wget which @c-development @development-tools \
-    @development-libs zlib-static which python3
+    @development-libs zlib-static which python3 zstd
 elif [[ $os == "ubuntu" ]]; then
     info "Installing dependencies for Ubuntu"
     sudo apt update
