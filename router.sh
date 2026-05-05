@@ -7,6 +7,9 @@ ADDRESS="192.168.1.1"
 HOSTNAME="Router"
 IS_HOTSPOT="false"
 
+# WAN Config
+WAN_VLAN="35" # Set to "false" to disable VLAN tagging
+
 # WiFi - 2GHz
 CHANNEL_2G="1"
 MODE_2G="HE20"
