@@ -4,7 +4,7 @@
 
 # Addresses
 ADDRESS="192.168.1.2"
-HOSTNAME="Hotspot 1"
+HOSTNAME="Hotspot_1"
 IS_HOTSPOT="true"
 
 # WiFi - 2GHz

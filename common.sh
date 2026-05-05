@@ -43,7 +43,7 @@ DNS6_2="2606:4700:4700::1001"
 
 # Packages
 PACKAGES="luci-ssl-openssl luci-app-sqm wpad-openssl speedtest-go iperf3 irqbalance"
-WPAD_REMOVED="-wpad -wpad-basic -wpad-basic-mbedtls -wpad-basic-openssl -wpad-basic-wolfssl -wpad-mesh-mbedtls -wpad-mesh-openssl -wpad-mesh-wolfssl -wpad-mini -wpad-openssl"
+WPAD_REMOVED="-wpad -wpad-basic -wpad-basic-mbedtls -wpad-basic-openssl -wpad-basic-wolfssl -wpad-mesh-mbedtls -wpad-mesh-openssl -wpad-mesh-wolfssl -wpad-mini"
 REMOVED_PACKAGES="$WPAD_REMOVED"
 
 ###
