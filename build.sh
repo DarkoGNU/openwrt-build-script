@@ -141,13 +141,13 @@ uci set system.@system[0].timezone="$TIMEZONE"
 EOL
 
   if [[ $IS_HOTSPOT == "false" ]]; then
-  uci set system.@system[0].description="Routes packets and provides WiFi!"
+  echo 'uci set system.@system[0].description="Routes packets and provides WiFi!"'
   else
-  uci set system.@system[0].description="Provides WiFi!"
+  echo 'uci set system.@system[0].description="Provides WiFi!"'
   fi
   echo
 
-  cat >> "${builder_dir}"/config/etc/uci-defaults/99-autoconf << EOL
+  cat << EOL
 # Redirect to HTTPS
 uci set uhttpd.main.redirect_https="on"
 
@@ -273,7 +273,7 @@ EOL
 fi
 
 if [[ $ENABLE_5G == "true" ]] || [[ $ENABLE_5G_ALT == "true" ]] || [[ $ENABLE_5G_LEGACY == "true" ]]; then
-  cat >> "${builder_dir}"/config/etc/uci-defaults/99-autoconf << EOL
+  cat << EOL
 # General WiFi 5G config
 uci set wireless.${radio_5g}.disabled="0"
 uci set wireless.${radio_5g}.country="$country_5g"
@@ -284,20 +284,20 @@ EOL
 fi
 
 if [[ $ENABLE_SQM == "true" ]] && [[ $IS_HOTSPOT == "false" ]]; then
-  cat >> "${builder_dir}"/config/etc/uci-defaults/99-autoconf << EOL
+  cat << EOL
 # SQM
 uci set sqm.eth1.enabled="1"
 
 EOL
 else
-  cat >> "${builder_dir}"/config/etc/uci-defaults/99-autoconf << EOL
+  cat << EOL
 # SQM
 uci set sqm.eth1.enabled="0"
 
 EOL
 fi
 
-  cat >> "${builder_dir}"/config/etc/uci-defaults/99-autoconf << EOL
+  cat << EOL
 uci set sqm.eth1.interface="wan"
 uci set sqm.eth1.download="$DOWNLOAD_SPEED"
 uci set sqm.eth1.upload="$UPLOAD_SPEED"
@@ -305,7 +305,7 @@ uci set sqm.eth1.upload="$UPLOAD_SPEED"
 EOL
 
 if [[ $IS_HOTSPOT == "true" ]]; then
-  cat >> "${builder_dir}"/config/etc/uci-defaults/99-autoconf << EOL
+  cat << EOL
 # Configure a hotspot
 /etc/init.d/sqm disable
 /etc/init.d/sqm stop
@@ -326,11 +326,13 @@ uci add_list network.lan.dns="$GATEWAY"
 EOL
 fi
 
-  cat >> "${builder_dir}"/config/etc/uci-defaults/99-autoconf << EOL
+  cat << EOL
 # The end
 exit 0
 
 EOL
+
+} > "$CONF_FILE"
 
 chmod 755 "${builder_dir}"/config/etc/uci-defaults/99-autoconf
 
