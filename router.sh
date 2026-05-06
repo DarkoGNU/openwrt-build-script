@@ -1,11 +1,10 @@
 #!/bin/bash
-
 ### Image config
 
 # Addresses
 ADDRESS="192.168.1.1"
 HOSTNAME="Router"
-IS_HOTSPOT="false"
+IS_AP="false"
 
 # WAN Config
 WAN_VLAN="35" # Set to "false" to disable VLAN tagging
@@ -30,11 +29,3 @@ ENABLE_5G_LEGACY="false"
 RELEASE="25.12.2"
 TARGET="mediatek/filogic"
 PROFILE="xiaomi_redmi-router-ax6000-stock"
-
-###
-
-### Build the image
-
-source build.sh
-
-###

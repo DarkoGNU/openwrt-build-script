@@ -1,11 +1,10 @@
 #!/bin/bash
-
 ### Image config
 
 # Addresses
 ADDRESS="192.168.1.2"
-HOSTNAME="Hotspot_1"
-IS_HOTSPOT="true"
+HOSTNAME="AccessPoint_1"
+IS_AP="true"
 
 # WiFi - 2GHz
 CHANNEL_2G="6"
@@ -27,11 +26,3 @@ ENABLE_5G_LEGACY="false"
 RELEASE="25.12.2"
 TARGET="mediatek/filogic"
 PROFILE="xiaomi_redmi-router-ax6000-stock"
-
-###
-
-### Build the image
-
-source build.sh
-
-###

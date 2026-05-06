@@ -1,10 +1,16 @@
 #!/bin/bash
 
-###
+### Run like: ./build.sh router.conf
 # Disclaimers:
 # - script assumes WiFi password contains no single quotes ('), if it does - they have to be escaped
 ###
 
+if [[ -z "$1" ]]; then
+    error "Usage: $0 <config_file>"
+    exit 1
+fi
+
+source "$1"
 source functions.sh
 source common.sh
 
@@ -127,6 +133,9 @@ EOL
 
 ###
 
+# Wipe old configuration
+rm -rf "${builder_dir}/config"
+
 ### Generate the config
 
 mkdir -p "${builder_dir}"/config/etc/uci-defaults/
@@ -145,7 +154,7 @@ uci set system.@system[0].timezone="$TIMEZONE"
 
 EOL
 
-  if [[ $IS_HOTSPOT == "false" ]]; then
+  if [[ $IS_AP == "false" ]]; then
   echo 'uci set system.@system[0].description="Routes packets and provides WiFi!"'
   else
   echo 'uci set system.@system[0].description="Provides WiFi!"'
@@ -288,7 +297,7 @@ uci set wireless.${radio_5g}.htmode="$MODE_5G"
 EOL
 fi
 
-if [[ $ENABLE_SQM == "true" ]] && [[ $IS_HOTSPOT == "false" ]]; then
+if [[ $ENABLE_SQM == "true" ]] && [[ $IS_AP == "false" ]]; then
   cat << EOL
 # SQM
 uci set sqm.eth1.enabled="1"
@@ -309,9 +318,9 @@ uci set sqm.eth1.upload="$UPLOAD_SPEED"
 
 EOL
 
-if [[ $IS_HOTSPOT == "true" ]]; then
+if [[ $IS_AP == "true" ]]; then
   cat << EOL
-# Configure a hotspot
+# Configure an access point
 /etc/init.d/sqm disable
 /etc/init.d/sqm stop
 
@@ -334,6 +343,12 @@ fi
   cat << EOL
 # Set root password hash
 sed -i "s|^root:[^:]*:|root:${root_pw_hash}:|" /etc/shadow
+
+# Double-ensurance for Dropbear permissions
+chmod 600 /etc/dropbear/*
+
+# And uci commit double-ensurance
+uci commit
 
 # The end
 exit 0
