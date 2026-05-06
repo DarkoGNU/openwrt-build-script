@@ -22,6 +22,9 @@ SSID_LEGACY="Legacy-2"
 ENABLE_2G_LEGACY="true"
 ENABLE_5G_LEGACY="false"
 
+# Hardware Ports
+WAN_PORT="eth1" # Physical WAN port name for this specific device
+
 # Target device
 RELEASE="25.12.2"
 TARGET="mediatek/filogic"

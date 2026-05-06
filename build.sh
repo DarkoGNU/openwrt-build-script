@@ -297,26 +297,23 @@ uci set wireless.${radio_5g}.htmode="$MODE_5G"
 EOL
 fi
 
+# SQM Hardware-Agnostic Config
+  cat << EOL
+# Rename the default SQM section to 'wan_sqm' to avoid relying on hardcoded 'eth1' package defaults
+uci rename sqm.@queue[0]='wan_sqm'
+uci set sqm.wan_sqm.interface="wan"
+EOL
+
 if [[ $ENABLE_SQM == "true" ]] && [[ $IS_AP == "false" ]]; then
   cat << EOL
-# SQM
 uci set sqm.eth1.enabled="1"
 
 EOL
 else
   cat << EOL
-# SQM
 uci set sqm.eth1.enabled="0"
-
 EOL
 fi
-
-  cat << EOL
-uci set sqm.eth1.interface="wan"
-uci set sqm.eth1.download="$DOWNLOAD_SPEED"
-uci set sqm.eth1.upload="$UPLOAD_SPEED"
-
-EOL
 
 if [[ $IS_AP == "true" ]]; then
   cat << EOL
@@ -336,6 +333,9 @@ uci set network.wan6.auto="0"
 
 uci set network.lan.gateway="$GATEWAY"
 uci add_list network.lan.dns="$GATEWAY"
+
+# Bridge physical WAN port to LAN
+uci add_list network.@device[0].ports="$WAN_PORT"
 
 EOL
 fi
@@ -364,7 +364,7 @@ if [[ -d secrets/ssh ]]; then
     chmod 700 "${builder_dir}"/config/etc/dropbear/
 
     if ls secrets/ssh/* 1> /dev/null 2>&1; then
-      cp secrets/ssh/* "${builder_dir}"/config/etc/dropbear/
+      cp -r secrets/ssh/* "${builder_dir}"/config/etc/dropbear/
       chmod 600 "${builder_dir}"/config/etc/dropbear/*
     fi
 fi
