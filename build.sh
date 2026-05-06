@@ -1,5 +1,10 @@
 #!/bin/bash
 
+###
+# Disclaimers:
+# - script assumes WiFi password contains no single quotes ('), if it does - they have to be escaped
+###
+
 source functions.sh
 source common.sh
 
@@ -73,7 +78,7 @@ uci set wireless.${1}.ssid="${2}"
 uci set wireless.${1}.device="${3}"
 
 uci set wireless.${1}.encryption="sae-mixed"
-uci set wireless.${1}.key="${4}"
+uci set wireless.${1}.key='${4}'
 
 uci set wireless.${1}.bss_transition='1'
 uci set wireless.${1}.time_advertisement='2'
@@ -106,7 +111,7 @@ uci set wireless.${1}.ssid="${2}"
 uci set wireless.${1}.device="${3}"
 
 uci set wireless.${1}.encryption="psk2"
-uci set wireless.${1}.key="${4}"
+uci set wireless.${1}.key='${4}'
 
 uci set wireless.${1}.bss_transition='1'
 uci set wireless.${1}.time_advertisement='2'
@@ -327,6 +332,9 @@ EOL
 fi
 
   cat << EOL
+# Set root password hash
+sed -i "s|^root:[^:]*:|root:${root_pw_hash}:|" /etc/shadow
+
 # The end
 exit 0
 
@@ -334,22 +342,19 @@ EOL
 
 } > "$CONF_FILE"
 
-chmod 755 "${builder_dir}"/config/etc/uci-defaults/99-autoconf
+chmod 755 "$CONF_FILE"
 
 if [[ -d secrets/ssh ]]; then
     mkdir -p "${builder_dir}"/config/etc/dropbear/
     chmod 700 "${builder_dir}"/config/etc/dropbear/
 
-    cp secrets/ssh/* "${builder_dir}"/config/etc/dropbear/
-    chmod 600 "${builder_dir}"/config/etc/dropbear/*
+    if ls secrets/ssh/* 1> /dev/null 2>&1; then
+      cp secrets/ssh/* "${builder_dir}"/config/etc/dropbear/
+      chmod 600 "${builder_dir}"/config/etc/dropbear/*
+    fi
 fi
 
 ###
-
-# Securely inject the root password hash
-mkdir -p "${builder_dir}"/config/etc/
-echo "root:${root_pw_hash}:19240:0:99999:7:::" > "${builder_dir}"/config/etc/shadow
-chmod 600 "${builder_dir}"/config/etc/shadow
 
 ### Actually build the image
 
