@@ -1,18 +1,43 @@
 #!/bin/bash
 
 ### Run like: ./build.sh router.conf
+### To build multiple: ./build.sh router.conf accesspoint.conf
 # Disclaimers:
-# - script assumes WiFi password contains no single quotes ('), if it does - they have to be escaped
+# - none :)
 ###
 
+source functions.sh
+
 if [[ -z "$1" ]]; then
-    error "Usage: $0 <config_file>"
+    error "Usage: $0 <config_files>"
     exit 1
 fi
 
-source "$1"
-source functions.sh
-source common.sh
+
+### Read secrets & set some variables
+
+if [ ! -f secrets/root_pw_hash ]; then
+    error "Root password secret not found"
+    exit 1;
+elif [ ! -f secrets/wifi_password ]; then
+    error "WiFi password secret not found"
+    exit 1;
+fi
+
+wan_mac=""
+if [[ -f secrets/wan_mac ]]; then
+    wan_mac=$(grep -v '^#' secrets/wan_mac | head -n 1 | tr -d '[:space:]') || true
+fi
+
+root_pw_hash=$(tr -d '\n' < secrets/root_pw_hash)
+wifi_password=$(tr -d '\n' < secrets/wifi_password)
+
+mkdir -p image_files
+
+for PROFILE_CONF in "$@"; do
+	(  
+source common.conf
+source "$PROFILE_CONF"
 
 ### Download and extract the image builder
 
@@ -28,7 +53,7 @@ builder_dir=builder-${RELEASE}-${TARGET////-}
 if [[ ! -d "${builder_dir}" ]]; then
     if [[ ! -e "$builder_archive" ]]; then
         info "Downloading the image builder"
-        wget -qO "$builder_archive" "$builder_link"
+        wget -O "$builder_archive" "$builder_link"
     fi
 
     info "Extracting the image builder"
@@ -40,24 +65,6 @@ if [[ ! -d "${builder_dir}" ]]; then
 fi
 
 ###
-
-### Read secrets & set some variables
-
-if [ ! -f secrets/root_pw_hash ]; then
-    error "Root password secret not found"
-    exit 1;
-elif [ ! -f secrets/wifi_password ]; then
-    error "WiFi password secret not found"
-    exit 1;
-fi
-
-wan_mac=""
-if [[ -f secrets/wan_mac ]]; then
-    wan_mac=$(grep -v '^#' secrets/wan_mac | head -n 1 | tr -d '[:space:]')
-fi
-
-root_pw_hash=$(<secrets/root_pw_hash)
-wifi_password=$(<secrets/wifi_password)
 
 radio_2g="radio${RADIO_2G}"
 radio_5g="radio${RADIO_5G}"
@@ -80,7 +87,7 @@ uci set wireless.${1}="wifi-iface"
 uci set wireless.${1}.network="lan"
 uci set wireless.${1}.mode="ap"
 
-uci set wireless.${1}.ssid="${2}"
+uci set wireless.${1}.ssid='${2}'
 uci set wireless.${1}.device="${3}"
 
 uci set wireless.${1}.encryption="sae-mixed"
@@ -113,7 +120,7 @@ uci set wireless.${1}="wifi-iface"
 uci set wireless.${1}.network="lan"
 uci set wireless.${1}.mode="ap"
 
-uci set wireless.${1}.ssid="${2}"
+uci set wireless.${1}.ssid='${2}'
 uci set wireless.${1}.device="${3}"
 
 uci set wireless.${1}.encryption="psk2"
@@ -136,6 +143,15 @@ EOL
 # Wipe old configuration
 rm -rf "${builder_dir}/config"
 
+# Sanitize variables to be injected safely
+SSID="${SSID//\'/\'\\\'\'}"
+SSID_2G_ALT="${SSID_2G_ALT//\'/\'\\\'\'}"
+SSID_5G_ALT="${SSID_5G_ALT//\'/\'\\\'\'}"
+SSID_LEGACY="${SSID_LEGACY//\'/\'\\\'\'}"
+
+root_pw_hash="${root_pw_hash//\'/\'\\\'\'}"
+wifi_password="${wifi_password//\'/\'\\\'\'}"
+
 ### Generate the config
 
 mkdir -p "${builder_dir}"/config/etc/uci-defaults/
@@ -146,6 +162,7 @@ CONF_FILE="${builder_dir}/config/etc/uci-defaults/99-autoconf"
 {
   cat << EOL
 #!/bin/sh
+exec > /root/autoconf-boot.log 2>&1 # generate log file
 
 # System info
 uci set system.@system[0].hostname="$HOSTNAME"
@@ -182,20 +199,25 @@ uci set network.wan6.peerdns="0"
 uci add_list network.wan6.dns="$DNS6_1"
 uci add_list network.wan6.dns="$DNS6_2"
 
+# Enable TCP BBR
+mkdir -p /etc/sysctl.d
+echo "net.core.default_qdisc=fq" > /etc/sysctl.d/99-bbr.conf
+echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.d/99-bbr.conf
+
 EOL
 
 # Optional WAN VLAN
 if [[ -n "$WAN_VLAN" ]] && [[ "$WAN_VLAN" != "false" ]]; then
   cat << EOL
 # Configure WAN VLAN
-uci set network.wan.device="wan.${WAN_VLAN}"
-uci set network.wan6.device="wan.${WAN_VLAN}"
+uci set network.wan.device="${WAN_PORT}.${WAN_VLAN}"
+uci set network.wan6.device="${WAN_PORT}.${WAN_VLAN}"
 
 EOL
 fi
 
 # Optional MAC Cloning
-if [[ -n "$wan_mac" ]]; then
+if [[ -n "$wan_mac" ]] && [[ $IS_AP == "false" ]]; then
   cat << EOL
 # Configure MAC Cloning
 uci set network.wan.macaddr="$wan_mac"
@@ -205,9 +227,10 @@ EOL
 fi
 
   cat << EOL
-# Remove default WiFi interfaces
-uci del wireless.default_radio0
-uci del wireless.default_radio1
+# Wipe default WiFi config completely and regenerate hardware baselines
+rm -f /etc/config/wireless
+wifi config
+while uci -q delete wireless.@wifi-iface[0]; do :; done
 
 EOL
 
@@ -299,33 +322,66 @@ fi
 
 # SQM Hardware-Agnostic Config
   cat << EOL
-# Rename the default SQM section to 'wan_sqm' to avoid relying on hardcoded 'eth1' package defaults
-uci rename sqm.@queue[0]='wan_sqm'
-uci set sqm.wan_sqm.interface="wan"
+# Name the default SQM section as 'wan_sqm'
+while uci -q delete sqm.@queue[0]; do :; done
+uci set sqm.wan_sqm="queue"
+
+uci set sqm.wan_sqm.interface="$SQM_INTERFACE"
+uci set sqm.wan_sqm.download="$DOWNLOAD_SPEED"
+uci set sqm.wan_sqm.upload="$UPLOAD_SPEED"
+
+uci set sqm.wan_sqm.linklayer="$LINKLAYER"
+uci set sqm.wan_sqm.overhead="$OVERHEAD"
 EOL
 
 if [[ $ENABLE_SQM == "true" ]] && [[ $IS_AP == "false" ]]; then
   cat << EOL
-uci set sqm.eth1.enabled="1"
+uci set sqm.wan_sqm.enabled="1"
 
 EOL
 else
   cat << EOL
-uci set sqm.eth1.enabled="0"
+uci set sqm.wan_sqm.enabled="0"
 EOL
+fi
+
+if [[ $IS_AP == "false" ]]; then
+  cat << EOL
+# Disable MSS Clamping (MTU Fix) on the WAN zone
+WAN_FW_ZONE=\$(uci show firewall | grep -E "firewall\..+\.name='wan'" | cut -d. -f2 | head -n 1)
+if [ -n "\$WAN_FW_ZONE" ]; then
+    uci set firewall."\$WAN_FW_ZONE".mtu_fix='0'
+EOL
+
+  if [[ $ENABLE_SQM == "true" ]]; then
+    cat << EOL
+# Disable flow offloading (required for SQM to function)
+uci set firewall.@defaults[0].flow_offloading='0'
+uci set firewall.@defaults[0].flow_offloading_hw='0'
+EOL
+  else
+    cat << EOL
+# Enable flow offloading (maximizes throughput when SQM is disabled)
+uci set firewall.@defaults[0].flow_offloading='1'
+uci set firewall.@defaults[0].flow_offloading_hw='1'
+EOL
+  fi
 fi
 
 if [[ $IS_AP == "true" ]]; then
   cat << EOL
 # Configure an access point
 /etc/init.d/sqm disable
-/etc/init.d/sqm stop
+/etc/init.d/sqm stop 2>/dev/null || true
 
 /etc/init.d/dnsmasq disable
-/etc/init.d/dnsmasq stop
+/etc/init.d/dnsmasq stop 2>/dev/null || true
 
 /etc/init.d/odhcpd disable
-/etc/init.d/odhcpd stop
+/etc/init.d/odhcpd stop 2>/dev/null || true
+
+/etc/init.d/firewall disable
+/etc/init.d/firewall stop 2>/dev/null || true
 
 uci set dhcp.lan.ignore="1"
 uci set network.wan.auto="0"
@@ -335,19 +391,44 @@ uci set network.lan.gateway="$GATEWAY"
 uci add_list network.lan.dns="$GATEWAY"
 
 # Bridge physical WAN port to LAN
-uci add_list network.@device[0].ports="$WAN_PORT"
+uci delete network.wan.device
+uci delete network.wan6.device
+
+# 1. Dynamically find the section ID for br-lan
+BR_SECTION=\$(uci show network | grep -E "network\..+\.name='?br-lan'?$" | cut -d. -f2 | head -n 1)
+
+# 2. Safely add the port if the section was found
+if [ -n "\$BR_SECTION" ]; then
+    uci add_list network."\$BR_SECTION".ports="$WAN_PORT"
+    uci commit network
+    /etc/init.d/network restart
+else
+    echo "Error: Could not locate the br-lan device section."
+fi
+
+EOL
+fi
+
+# Nuke IPv6 if it's not enabled
+if [[ $ENABLE_IPV6 == "false" ]]; then
+  cat << EOL
+uci -q delete network.globals.ula_prefix
+uci set dhcp.lan.dhcpv6='disabled'
+uci set dhcp.lan.ra='disabled'
+uci set dhcp.lan.ndp='disabled'
+uci -q delete network.wan6
 
 EOL
 fi
 
   cat << EOL
 # Set root password hash
-sed -i "s|^root:[^:]*:|root:${root_pw_hash}:|" /etc/shadow
+sed -i 's|^root:[^:]*:|root:${root_pw_hash}:|' /etc/shadow
 
 # Double-ensurance for Dropbear permissions
-chmod 600 /etc/dropbear/*
+chmod 600 /etc/dropbear/* || true
 
-# And uci commit double-ensurance
+# And one for uci commit
 uci commit
 
 # The end
@@ -363,9 +444,25 @@ if [[ -d secrets/ssh ]]; then
     mkdir -p "${builder_dir}"/config/etc/dropbear/
     chmod 700 "${builder_dir}"/config/etc/dropbear/
 
-    if ls secrets/ssh/* 1> /dev/null 2>&1; then
-      cp -r secrets/ssh/* "${builder_dir}"/config/etc/dropbear/
-      chmod 600 "${builder_dir}"/config/etc/dropbear/*
+    # Populate ssh_keys
+    shopt -s nullglob
+    ssh_keys=(secrets/ssh/*)
+    shopt -u nullglob
+
+    if [[ ${#ssh_keys[@]} -gt 0 ]]; then
+      cp secrets/ssh/authorized_keys "${builder_dir}/config/etc/dropbear/" 2>/dev/null || true
+      cat secrets/ssh/*.pub >> "${builder_dir}/config/etc/dropbear/authorized_keys" 2>/dev/null || true # Append public keys to authorized_keys
+      sort -u "${builder_dir}/config/etc/dropbear/authorized_keys" -o "${builder_dir}/config/etc/dropbear/authorized_keys" # Strip any duplicate keys
+
+      # Copy device-specific host keys and remove the hostname suffix
+      for host_key in secrets/ssh/*_host_key."${HOSTNAME}"; do
+        if [[ -f "$host_key" ]]; then
+          dest_name=$(basename "$host_key" | sed "s/\.${HOSTNAME}$//")
+          cp "$host_key" "${builder_dir}/config/etc/dropbear/$dest_name"
+        fi
+      done
+
+      chmod 600 "${builder_dir}/config/etc/dropbear/"*
     fi
 fi
 
@@ -373,16 +470,31 @@ fi
 
 ### Actually build the image
 
+info "Compiling image for $HOSTNAME ($PROFILE)..."
 cd "${builder_dir}/"
 
 rm -rf images/
 make clean
-make image PROFILE="$PROFILE" PACKAGES="$PACKAGES $REMOVED_PACKAGES" EXTRA_IMAGE_NAME="$HOSTNAME" FILES="${PWD}/config/" BIN_DIR="${PWD}/images/"
+make image PROFILE="$PROFILE" PACKAGES="$PACKAGES $EXTRA_PACKAGES $REMOVED_PACKAGES $EXTRA_REMOVED" EXTRA_IMAGE_NAME="$HOSTNAME" FILES="${PWD}/config/" BIN_DIR="${PWD}/images/"
 
 cd ..
-mkdir -p images/
-cp "${builder_dir}"/images/*.bin images/
+# Copy to the global master output directory
+# Gather all common OpenWrt image extensions safely
+shopt -s nullglob
+compiled_images=("${builder_dir}"/images/*.{bin,itb,img,gz,tar})
+shopt -u nullglob
+
+if [[ ${#compiled_images[@]} -gt 0 ]]; then
+    cp "${compiled_images[@]}" image_files/
+else
+    error "No compiled images found for $HOSTNAME"
+fi
+
+info "Finished $HOSTNAME! Saved to image_files/"
+
+    ) || { error "Build failed for $PROFILE_CONF"; continue; }
+done
+
+info "All images built successfully. Check the 'image_files' directory"
 
 ###
-
-info "Image building completed. Enjoy!"

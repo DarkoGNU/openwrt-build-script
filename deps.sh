@@ -8,8 +8,8 @@ if [[ -e /etc/arch-release ]]; then
     os="arch"
 elif [[ -e /etc/redhat-release ]]; then
     os="rhel"
-elif grep -qi "ubuntu" /etc/os-release 2>/dev/null; then
-    os="ubuntu"
+elif command -v apt &> /dev/null; then
+    os="debian"
 else
     error "Your operating system is unsupported"
     exit 1
@@ -18,6 +18,9 @@ fi
 ###
 
 ### Install dependencies
+
+# Ask for sudo password
+sudo -v
 
 if [[ $os == "arch" ]]; then
     info "Installing dependencies for Arch Linux"
@@ -29,7 +32,7 @@ elif [[ $os == "rhel" ]]; then
     sudo dnf install git gawk gettext ncurses-devel zlib-devel \
     openssl-devel libxslt wget which @c-development @development-tools \
     @development-libs zlib-static which python3 zstd
-elif command -v apt &> /dev/null; then
+elif [[ $os == "debian" ]]; then
     info "Installing dependencies for Debian/Ubuntu"
     sudo apt update
     sudo apt install build-essential clang flex bison g++ gawk \
