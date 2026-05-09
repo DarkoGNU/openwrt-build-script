@@ -360,6 +360,7 @@ WAN_FW_ZONE=\$(uci show firewall | grep -E "firewall\..+\.name='wan'" | cut -d. 
 if [ -n "\$WAN_FW_ZONE" ]; then
     uci set firewall."\$WAN_FW_ZONE".mtu_fix='0'
 fi
+
 EOL
 
   if [[ $ENABLE_SQM == "true" ]]; then
