@@ -29,8 +29,8 @@ if [[ -f secrets/wan_mac ]]; then
     wan_mac=$(grep -v '^#' secrets/wan_mac | head -n 1 | tr -d '[:space:]') || true
 fi
 
-root_pw_hash=$(tr -d '\n' < secrets/root_pw_hash)
-wifi_password=$(tr -d '\n' < secrets/wifi_password)
+root_pw_hash=$(grep -v '^#' secrets/root_pw_hash | head -n 1 | tr -d '\n\r')
+wifi_password=$(grep -v '^#' secrets/wifi_password | head -n 1 | tr -d '\n\r')
 
 mkdir -p image_files
 
@@ -192,6 +192,7 @@ uci set uhttpd.main.redirect_https="on"
 
 # LAN interface
 uci set network.lan.ipaddr="$ADDRESS"
+uci set network.lan.proto="static"
 
 uci add_list dhcp.lan.dhcp_option="6,$DNS_1,$DNS_2"
 uci add_list dhcp.lan.dns="$DNS6_1"
