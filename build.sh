@@ -92,6 +92,7 @@ uci set wireless.${1}.device="${3}"
 
 uci set wireless.${1}.encryption="sae-mixed"
 uci set wireless.${1}.key='${4}'
+uci set wireless.${1}.ieee80211w='1' # 1 = Optional, 2 = Required
 
 uci set wireless.${1}.bss_transition='1'
 uci set wireless.${1}.time_advertisement='2'
@@ -351,6 +352,7 @@ if [[ $IS_AP == "false" ]]; then
 WAN_FW_ZONE=\$(uci show firewall | grep -E "firewall\..+\.name='wan'" | cut -d. -f2 | head -n 1)
 if [ -n "\$WAN_FW_ZONE" ]; then
     uci set firewall."\$WAN_FW_ZONE".mtu_fix='0'
+fi
 EOL
 
   if [[ $ENABLE_SQM == "true" ]]; then
@@ -401,7 +403,6 @@ BR_SECTION=\$(uci show network | grep -E "network\..+\.name='?br-lan'?$" | cut -
 if [ -n "\$BR_SECTION" ]; then
     uci add_list network."\$BR_SECTION".ports="$WAN_PORT"
     uci commit network
-    /etc/init.d/network restart
 else
     echo "Error: Could not locate the br-lan device section."
 fi

@@ -31,7 +31,7 @@ elif [[ $os == "rhel" ]]; then
     info "Installing dependencies for Enterprise Linux"
     sudo dnf install git gawk gettext ncurses-devel zlib-devel \
     openssl-devel libxslt wget which @c-development @development-tools \
-    @development-libs zlib-static which python3 zstd
+    @development-libs zlib-static python3 zstd
 elif [[ $os == "debian" ]]; then
     info "Installing dependencies for Debian/Ubuntu"
     sudo apt update
