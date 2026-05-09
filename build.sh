@@ -34,6 +34,8 @@ wifi_password=$(tr -d '\n' < secrets/wifi_password)
 
 mkdir -p image_files
 
+is_first_run="true"
+
 for PROFILE_CONF in "$@"; do
 	(  
 source common.conf
@@ -448,7 +450,6 @@ if [[ -d secrets/ssh ]]; then
     # Populate ssh_keys
     shopt -s nullglob
     ssh_keys=(secrets/ssh/*)
-    shopt -u nullglob
 
     if [[ ${#ssh_keys[@]} -gt 0 ]]; then
       cp secrets/ssh/authorized_keys "${builder_dir}/config/etc/dropbear/" 2>/dev/null || true
@@ -464,6 +465,7 @@ if [[ -d secrets/ssh ]]; then
       done
 
       chmod 600 "${builder_dir}/config/etc/dropbear/"*
+      shopt -u nullglob
     fi
 fi
 
@@ -475,7 +477,14 @@ info "Compiling image for $HOSTNAME ($PROFILE)..."
 cd "${builder_dir}/"
 
 rm -rf images/
-make clean
+
+if [[ "$REQUIRES_CLEAN" == "true" ]] || [[ "$is_first_run" == "true" ]]; then
+  info "Running make clean for $HOSTNAME..."
+  make clean
+else
+  info "Skipping make clean for $HOSTNAME..."
+fi
+
 make image PROFILE="$PROFILE" PACKAGES="$PACKAGES $EXTRA_PACKAGES $REMOVED_PACKAGES $EXTRA_REMOVED" EXTRA_IMAGE_NAME="$HOSTNAME" FILES="${PWD}/config/" BIN_DIR="${PWD}/images/"
 
 cd ..
@@ -494,6 +503,8 @@ fi
 info "Finished $HOSTNAME! Saved to image_files/"
 
     ) || { error "Build failed for $PROFILE_CONF"; continue; }
+
+    is_first_run="false"
 done
 
 info "All images built successfully. Check the 'image_files' directory"
