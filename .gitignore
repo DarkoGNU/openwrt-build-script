@@ -13,10 +13,10 @@
 *.vsix
 
 # Image builder
-builder/*
+builder-*/
 
 # Images
-images/*
+image_files/
 
 # Secrets
 secrets/*

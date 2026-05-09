@@ -37,7 +37,12 @@ mkdir -p image_files
 is_first_run="true"
 
 for PROFILE_CONF in "$@"; do
-	(  
+  (
+if [[ ! -f "$PROFILE_CONF" ]]; then
+  error "Skipping: $PROFILE_CONF is not a valid file"
+  continue
+fi
+
 source common.conf
 source "$PROFILE_CONF"
 
@@ -453,7 +458,7 @@ if [[ -d secrets/ssh ]]; then
 
     if [[ ${#ssh_keys[@]} -gt 0 ]]; then
       cp secrets/ssh/authorized_keys "${builder_dir}/config/etc/dropbear/" 2>/dev/null || true
-      cat secrets/ssh/*.pub >> "${builder_dir}/config/etc/dropbear/authorized_keys" 2>/dev/null || true # Append public keys to authorized_keys
+      cat /dev/null secrets/ssh/*.pub >> "${builder_dir}/config/etc/dropbear/authorized_keys" 2>/dev/null || true # Append public keys to authorized_keys
       sort -u "${builder_dir}/config/etc/dropbear/authorized_keys" -o "${builder_dir}/config/etc/dropbear/authorized_keys" # Strip any duplicate keys
 
       # Copy device-specific host keys and remove the hostname suffix
