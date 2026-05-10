@@ -13,7 +13,6 @@ if [[ -z "$1" ]]; then
     exit 1
 fi
 
-
 ### Read secrets & set some variables
 
 if [ ! -f secrets/root_pw_hash ]; then
@@ -111,7 +110,7 @@ uci set wireless.${1}.rrm_neighbor_report='1'
 uci set wireless.${1}.rrm_beacon_report='1'
 
 uci set wireless.${1}.ieee80211r="1"
-uci set wireless.${1}.ft_over_ds="1"
+uci set wireless.${1}.ft_over_ds="$FT_OVER_DS"
 uci set wireless.${1}.ft_psk_generate_local="1"
 uci set wireless.${1}.mobility_domain="${5}"
 
@@ -163,6 +162,7 @@ wifi_password="${wifi_password//\'/\'\\\'\'}"
 # Translate "true" / "false" to 0/1 for UCI
 FLOW_OFFLOADING=$([[ "$FLOW_OFFLOADING" == "true" ]] && echo "1" || echo "0")
 FLOW_OFFLOADING_HW=$([[ "$FLOW_OFFLOADING_HW" == "true" ]] && echo "1" || echo "0")
+FT_OVER_DS=$([[ "$FT_OVER_DS" == "true" ]] && echo "1" || echo "0")
 
 # Translate packet steering config
 if [[ "$PACKET_STEERING" == "enabled_all" ]]; then
@@ -256,7 +256,7 @@ if [[ "$PACKET_STEERING" != "0" ]] && [[ "$STEERING_AFFINITY" != "disabled" ]]; 
   cat << EOL
 # Set custom RPS CPU affinity via Hotplug
 mkdir -p /etc/hotplug.d/net
-cat << 'EOF' > /etc/hotplug.d/net/30-rps-affinity
+cat << EOF > /etc/hotplug.d/net/30-rps-affinity
 [ "\$ACTION" = "add" ] && {
     for d in /sys/class/net/*/queues/rx-*/rps_cpus; do
         [ -f "\$d" ] && echo $STEERING_AFFINITY > "\$d"
