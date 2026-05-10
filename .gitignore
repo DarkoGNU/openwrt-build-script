@@ -25,6 +25,9 @@ secrets/*
 *.tar.zst
 *.tar.zst.*
 
+# Other archives
+*.tar.gz
+
 # Vim.gitignore
 # Swap
 [._]*.s[a-v][a-z]

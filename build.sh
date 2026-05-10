@@ -189,7 +189,6 @@ exec > /root/autoconf-boot.log 2>&1 # generate log file
 uci set system.@system[0].hostname="$HOSTNAME"
 uci set system.@system[0].zonename="$ZONENAME"
 uci set system.@system[0].timezone="$TIMEZONE"
-
 EOL
 
   if [[ $IS_AP == "false" ]]; then
@@ -420,6 +419,7 @@ if [ -n "\$WAN_FW_ZONE" ]; then
 fi
 
 EOL
+fi
 
 if [[ $IS_AP == "true" ]]; then
   cat << EOL
@@ -461,9 +461,9 @@ fi
 EOL
 fi
 
-# Nuke IPv6 if it's not enabled
 if [[ $ENABLE_IPV6 == "false" ]]; then
   cat << EOL
+# Nuke IPv6 if it's not enabled
 uci -q delete network.globals.ula_prefix
 uci set dhcp.lan.dhcpv6='disabled'
 uci set dhcp.lan.ra='disabled'
