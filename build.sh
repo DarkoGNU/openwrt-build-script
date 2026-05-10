@@ -160,6 +160,10 @@ SSID_LEGACY="${SSID_LEGACY//\'/\'\\\'\'}"
 root_pw_hash="${root_pw_hash//\'/\'\\\'\'}"
 wifi_password="${wifi_password//\'/\'\\\'\'}"
 
+# Translate "true" / "false" to 0/1 for UCI
+FLOW_OFFLOADING=$([[ "$FLOW_OFFLOADING" == "true" ]] && echo "1" || echo "0")
+FLOW_OFFLOADING_HW=$([[ "$FLOW_OFFLOADING_HW" == "true" ]] && echo "1" || echo "0")
+
 ### Generate the config
 
 mkdir -p "${builder_dir}"/config/etc/uci-defaults/
@@ -212,6 +216,10 @@ uci add_list network.wan6.dns="$DNS6_2"
 mkdir -p /etc/sysctl.d
 echo "net.core.default_qdisc=fq" > /etc/sysctl.d/99-bbr.conf
 echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.d/99-bbr.conf
+
+# Flow offloading
+uci set firewall.@defaults[0].flow_offloading='$FLOW_OFFLOADING'
+uci set firewall.@defaults[0].flow_offloading_hw='$FLOW_OFFLOADING_HW'
 
 EOL
 
