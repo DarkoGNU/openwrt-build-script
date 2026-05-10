@@ -364,21 +364,6 @@ fi
 
 EOL
 
-  if [[ $ENABLE_SQM == "true" ]]; then
-    cat << EOL
-# Disable flow offloading (required for SQM to function)
-uci set firewall.@defaults[0].flow_offloading='0'
-uci set firewall.@defaults[0].flow_offloading_hw='0'
-EOL
-  else
-    cat << EOL
-# Enable flow offloading (maximizes throughput when SQM is disabled)
-uci set firewall.@defaults[0].flow_offloading='1'
-uci set firewall.@defaults[0].flow_offloading_hw='1'
-EOL
-  fi
-fi
-
 if [[ $IS_AP == "true" ]]; then
   cat << EOL
 # Configure an access point
