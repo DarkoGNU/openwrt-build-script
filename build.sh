@@ -164,6 +164,15 @@ wifi_password="${wifi_password//\'/\'\\\'\'}"
 FLOW_OFFLOADING=$([[ "$FLOW_OFFLOADING" == "true" ]] && echo "1" || echo "0")
 FLOW_OFFLOADING_HW=$([[ "$FLOW_OFFLOADING_HW" == "true" ]] && echo "1" || echo "0")
 
+# Translate packet steering config
+if [[ "$PACKET_STEERING" == "enabled_all" ]]; then
+  PACKET_STEERING="2"
+elif [[ "$PACKET_STEERING" == "enabled" ]]; then
+  PACKET_STEERING="1"
+else
+  PACKET_STEERING="0"
+fi
+
 ### Generate the config
 
 mkdir -p "${builder_dir}"/config/etc/uci-defaults/
@@ -222,6 +231,43 @@ uci set firewall.@defaults[0].flow_offloading='$FLOW_OFFLOADING'
 uci set firewall.@defaults[0].flow_offloading_hw='$FLOW_OFFLOADING_HW'
 
 EOL
+
+  cat << EOL
+# Packet steering
+uci set network.globals.packet_steering='$PACKET_STEERING'
+
+EOL
+
+if [[ "$STEERING_FLOWS" != "disabled" ]]; then
+  cat << EOL
+# Steering flows (RPS)
+uci set network.globals.steering_flows='$STEERING_FLOWS'
+
+EOL
+else
+  cat << EOL
+# Ensure Steering flows (RPS) are disabled
+uci -q del network.globals.steering_flows
+
+EOL
+fi
+
+# Apply the CPU affinity mask if steering is set to 'enabled_all' (which translates to 2)
+if [[ "$PACKET_STEERING" != "0" ]] && [[ "$STEERING_AFFINITY" != "disabled" ]]; then
+  cat << EOL
+# Set custom RPS CPU affinity via Hotplug
+mkdir -p /etc/hotplug.d/net
+cat << 'EOF' > /etc/hotplug.d/net/30-rps-affinity
+[ "\$ACTION" = "add" ] && {
+    for d in /sys/class/net/*/queues/rx-*/rps_cpus; do
+        [ -f "\$d" ] && echo $STEERING_AFFINITY > "\$d"
+    done
+}
+EOF
+chmod +x /etc/hotplug.d/net/30-rps-affinity
+
+EOL
+fi
 
 # Optional WAN VLAN
 if [[ -n "$WAN_VLAN" ]] && [[ "$WAN_VLAN" != "false" ]]; then
@@ -346,6 +392,9 @@ uci set sqm.wan_sqm="queue"
 uci set sqm.wan_sqm.interface="$SQM_INTERFACE"
 uci set sqm.wan_sqm.download="$DOWNLOAD_SPEED"
 uci set sqm.wan_sqm.upload="$UPLOAD_SPEED"
+
+uci set sqm.wan_sqm.qdisc="$SQM_QDISC"
+uci set sqm.wan_sqm.script="$SQM_SCRIPT"
 
 uci set sqm.wan_sqm.linklayer="$LINKLAYER"
 uci set sqm.wan_sqm.overhead="$OVERHEAD"
