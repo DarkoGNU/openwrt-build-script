@@ -8,8 +8,14 @@
 
 source functions.sh
 
+CONFIG_ONLY="false"
+if [[ "$1" == "--config-only" ]]; then
+  CONFIG_ONLY="true"
+  shift
+fi
+
 if [[ -z "$1" ]]; then
-    error "Usage: $0 <config_files>"
+    error "Usage: $0 [--config-only] <config_files>"
     exit 1
 fi
 
@@ -256,11 +262,11 @@ if [[ "$PACKET_STEERING" != "0" ]] && [[ "$STEERING_AFFINITY" != "disabled" ]]; 
   cat << EOL
 # Set custom RPS CPU affinity via Hotplug
 mkdir -p /etc/hotplug.d/net
-cat << EOF > /etc/hotplug.d/net/30-rps-affinity
+cat << 'EOF' > /etc/hotplug.d/net/30-rps-affinity
 [ "\$ACTION" = "add" ] && {
-    for d in /sys/class/net/*/queues/rx-*/rps_cpus; do
-        [ -f "\$d" ] && echo $STEERING_AFFINITY > "\$d"
-    done
+  for d in /sys/class/net/*/queues/rx-*/rps_cpus; do
+    [ -f "\$d" ] && echo $STEERING_AFFINITY > "\$d"
+  done
 }
 EOF
 chmod +x /etc/hotplug.d/net/30-rps-affinity
@@ -520,6 +526,13 @@ fi
 
 ###
 
+cp "$CONF_FILE" "image_files/99-autoconf-${HOSTNAME}"
+info "Exporting UCI defaults for $HOSTNAME"
+if [[ "$CONFIG_ONLY" == "true" ]]; then
+  info "Config-only mode. Continuing..."
+  exit 0
+fi
+
 ### Actually build the image
 
 info "Compiling image for $HOSTNAME ($PROFILE)..."
@@ -528,10 +541,10 @@ cd "${builder_dir}/"
 rm -rf images/
 
 if [[ "$REQUIRES_CLEAN" == "true" ]] || [[ "$is_first_run" == "true" ]]; then
-  info "Running make clean for $HOSTNAME..."
+  info "Running make clean for $HOSTNAME"
   make clean
 else
-  info "Skipping make clean for $HOSTNAME..."
+  info "Skipping make clean for $HOSTNAME"
 fi
 
 make image PROFILE="$PROFILE" PACKAGES="$PACKAGES $EXTRA_PACKAGES $REMOVED_PACKAGES $EXTRA_REMOVED" EXTRA_IMAGE_NAME="$HOSTNAME" FILES="${PWD}/config/" BIN_DIR="${PWD}/images/"
