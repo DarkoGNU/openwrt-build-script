@@ -253,7 +253,7 @@ fi
 
 # Apply the CPU affinity mask if steering is set to 'enabled_all' (which translates to 2)
 if [[ "$PACKET_STEERING" != "0" ]] && [[ "$STEERING_AFFINITY" != "disabled" ]]; then
-  cat << EOL
+  cat << EOL
 # Set custom RPS CPU affinity via Hotplug
 mkdir -p /etc/hotplug.d/net
 cat << EOF > /etc/hotplug.d/net/30-rps-affinity
