@@ -189,7 +189,25 @@ CONF_FILE="${builder_dir}/config/etc/uci-defaults/99-autoconf"
 {
   cat << EOL
 #!/bin/sh
-exec > /root/autoconf-boot.log 2>&1 # generate log file
+
+# 1. Find the next available log number (00, 01, 02...)
+i=0
+while [ -f "/root/autoconf-boot_\$(printf "%02d" "\$i").log" ]; do
+    i=$((i + 1))
+done
+LOG_FILE="/root/autoconf-boot_\$(printf "%02d" "\$i").log"
+
+# 2. Log precise timestamp at the top
+echo "=== Script executed at: \$(date +'%Y-%m-%d %H:%M:%S') ===" > "\$LOG_FILE"
+
+# 3. Redirect all further output to append to the new log file
+exec >> "\$LOG_FILE" 2>&1
+
+# 4. Override uci to log its arguments quietly
+uci() {
+    echo ">>> uci \$*"
+    command uci "\$@"
+}
 
 # System info
 uci set system.@system[0].hostname="$HOSTNAME"
