@@ -239,11 +239,20 @@ uci set network.wan.peerdns="0"
 uci add_list network.wan.dns="$DNS_1"
 uci add_list network.wan.dns="$DNS_2"
 
+EOL
+
+if [[ $ENABLE_IPV6 == "true" ]]; then
+  cat << EOL
 # WAN6 interface
+uci set network.wan6="interface"
 uci set network.wan6.peerdns="0"
 uci add_list network.wan6.dns="$DNS6_1"
 uci add_list network.wan6.dns="$DNS6_2"
 
+EOL
+fi
+
+  cat << EOL
 # Enable TCP BBR
 mkdir -p /etc/sysctl.d
 echo "net.core.default_qdisc=fq" > /etc/sysctl.d/99-bbr.conf
@@ -297,9 +306,11 @@ if [[ -n "$WAN_VLAN" ]] && [[ "$WAN_VLAN" != "false" ]]; then
   cat << EOL
 # Configure WAN VLAN
 uci set network.wan.device="${WAN_PORT}.${WAN_VLAN}"
-uci set network.wan6.device="${WAN_PORT}.${WAN_VLAN}"
-
 EOL
+  if [[ $ENABLE_IPV6 == "true" ]]; then
+    echo "uci set network.wan6.device=\"${WAN_PORT}.${WAN_VLAN}\""
+  fi
+  echo
 fi
 
 # Optional MAC Cloning
@@ -307,9 +318,11 @@ if [[ -n "$wan_mac" ]] && [[ $IS_AP == "false" ]]; then
   cat << EOL
 # Configure MAC Cloning
 uci set network.wan.macaddr="$wan_mac"
-uci set network.wan6.macaddr="$wan_mac"
-
 EOL
+  if [[ $ENABLE_IPV6 == "true" ]]; then
+    echo "uci set network.wan6.macaddr=\"$wan_mac\""
+  fi
+  echo
 fi
 
   cat << EOL
@@ -462,14 +475,19 @@ if [[ $IS_AP == "true" ]]; then
 
 uci set dhcp.lan.ignore="1"
 uci set network.wan.auto="0"
-uci set network.wan6.auto="0"
+EOL
 
+  if [[ $ENABLE_IPV6 == "true" ]]; then
+    echo 'uci set network.wan6.auto="0"'
+  fi
+
+  cat << EOL
 uci set network.lan.gateway="$GATEWAY"
 uci add_list network.lan.dns="$GATEWAY"
 
 # Bridge physical WAN port to LAN
-uci delete network.wan.device
-uci delete network.wan6.device
+uci -q delete network.wan.device
+uci -q delete network.wan6.device
 
 # 1. Dynamically find the section ID for br-lan
 BR_SECTION=\$(uci show network | grep -E "network\..+\.name='?br-lan'?$" | cut -d. -f2 | head -n 1)
