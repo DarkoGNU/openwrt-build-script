@@ -102,7 +102,7 @@ uci set wireless.${1}.mode="ap"
 uci set wireless.${1}.ssid='${2}'
 uci set wireless.${1}.device="${3}"
 
-uci set wireless.${1}.encryption="sae-mixed"
+uci set wireless.${1}.encryption="sae"
 uci set wireless.${1}.key='${4}'
 uci set wireless.${1}.ieee80211w='1' # 1 = Optional, 2 = Required
 
@@ -193,7 +193,7 @@ CONF_FILE="${builder_dir}/config/etc/uci-defaults/99-autoconf"
 # 1. Find the next available log number (00, 01, 02...)
 i=0
 while [ -f "/root/autoconf-boot_\$(printf "%02d" "\$i").log" ]; do
-    i=$((i + 1))
+    i=\$((i + 1))
 done
 LOG_FILE="/root/autoconf-boot_\$(printf "%02d" "\$i").log"
 
